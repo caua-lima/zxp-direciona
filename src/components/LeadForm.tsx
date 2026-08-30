@@ -1,120 +1,83 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { Reveal } from "./Reveal";
-
-const faixasIdade = ["16 a 18", "19 a 21", "22 a 25", "26 ou mais"];
-
-const opcoesPeso = [
-  "Não sei qual curso ou carreira escolher",
-  "Escolhi, mas não me identifico mais",
-  "Preciso decidir entre trabalhar, empreender ou estudar",
-  "A pressão da minha família por uma decisão",
-  "Sei o que quero, mas não sei como começar",
-  "Outro",
-];
-
-type Campos = {
-  nome: string;
-  whatsapp: string;
-  email: string;
-  idade: string;
-  peso: string;
-  contexto: string;
-};
-
-type Erros = Partial<Record<keyof Campos, string>>;
-
-const inicial: Campos = {
-  nome: "",
-  whatsapp: "",
-  email: "",
-  idade: "",
-  peso: "",
-  contexto: "",
-};
-
-/** Formata o número como (00) 00000-0000 enquanto a pessoa digita. */
-function mascaraWhatsapp(valor: string) {
-  const digitos = valor.replace(/\D/g, "").slice(0, 11);
-
-  if (digitos.length <= 2) return digitos;
-  if (digitos.length <= 6) return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
-  if (digitos.length <= 10)
-    return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 6)}-${digitos.slice(6)}`;
-
-  return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 7)}-${digitos.slice(7)}`;
-}
-
-function validar(campos: Campos): Erros {
-  const erros: Erros = {};
-
-  if (campos.nome.trim().length < 2) {
-    erros.nome = "Escreve seu nome pra gente saber como te chamar.";
-  }
-
-  const digitos = campos.whatsapp.replace(/\D/g, "");
-  if (digitos.length < 10 || digitos.length > 11) {
-    erros.whatsapp = "Coloca o WhatsApp com DDD, ex: (11) 91234-5678.";
-  }
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(campos.email.trim())) {
-    erros.email = "Confere o e-mail — parece que faltou alguma coisa.";
-  }
-
-  if (!campos.idade) erros.idade = "Escolhe sua faixa de idade.";
-  if (!campos.peso) erros.peso = "Escolhe a opção que mais se parece com você.";
-
-  return erros;
-}
+import {
+  faixasIdade,
+  opcoesPeso,
+  mascaraWhatsapp,
+  validarLead,
+  leadVazio,
+  type Lead,
+  type ErrosLead,
+} from "@/lib/lead";
 
 const inputBase =
   "w-full rounded-xl border bg-onyx px-4 py-3.5 text-marfim transition placeholder:text-marfim/30 focus:outline-none";
 
+function classesCampo(temErro: boolean) {
+  return `${inputBase} ${
+    temErro ? "border-dourado/60" : "border-onyx-line focus:border-dourado"
+  }`;
+}
+
 export function LeadForm() {
-  const [campos, setCampos] = useState<Campos>(inicial);
-  const [erros, setErros] = useState<Erros>({});
+  const [campos, setCampos] = useState<Lead>(leadVazio);
+  const [honeypot, setHoneypot] = useState("");
+  const [erros, setErros] = useState<ErrosLead>({});
+  const [falhaEnvio, setFalhaEnvio] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
 
-  function atualizar(campo: keyof Campos, valor: string) {
+  function atualizar<C extends keyof Lead>(campo: C, valor: Lead[C]) {
     setCampos((atual) => ({ ...atual, [campo]: valor }));
-    // limpa o erro assim que a pessoa corrige o campo
     setErros((atual) => ({ ...atual, [campo]: undefined }));
+    setFalhaEnvio(null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const novosErros = validar(campos);
+    const novosErros = validarLead(campos);
     setErros(novosErros);
 
     if (Object.keys(novosErros).length > 0) {
-      // leva o foco pro primeiro campo com erro
-      const primeiro = Object.keys(novosErros)[0];
-      document.getElementById(primeiro)?.focus();
+      document.getElementById(Object.keys(novosErros)[0])?.focus();
       return;
     }
 
     setEnviando(true);
+    setFalhaEnvio(null);
 
-    // ─────────────────────────────────────────────────────────────────
-    // ⚠️ MOCK — não há integração de envio real ainda.
-    // Plugue o backend aqui. Opções:
-    //   • Route handler próprio:  await fetch("/api/leads", {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify(campos),
-    //     });
-    //   • Webhook (Zapier / Make / n8n): troque a URL acima pela do webhook.
-    //   • Google Sheets: endpoint de um Apps Script publicado como Web App.
-    //   • CRM (RD Station, HubSpot, Pipedrive): endpoint da API do CRM.
-    // Lembre de tratar o erro de rede e mostrar mensagem pra pessoa.
-    // ─────────────────────────────────────────────────────────────────
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    try {
+      const resposta = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...campos, empresa: honeypot }),
+      });
 
-    setEnviando(false);
-    setEnviado(true);
+      if (resposta.status === 422) {
+        // O servidor revalida com as mesmas regras; se reprovou aqui, é porque
+        // algo passou pelo cliente. Mostra os erros dele e não perde o que foi
+        // digitado.
+        const { erros: errosServidor } = await resposta.json();
+        setErros(errosServidor ?? {});
+        setEnviando(false);
+        return;
+      }
+
+      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+
+      setEnviado(true);
+    } catch {
+      // O cadastro NÃO foi salvo. Dizer "recebido" aqui seria mentir e o lead
+      // sumiria — então mostramos a falha e oferecemos o WhatsApp como saída.
+      setFalhaEnvio(
+        "Não consegui enviar seu cadastro agora. Tenta de novo em instantes — se continuar, me chama direto no WhatsApp.",
+      );
+    } finally {
+      setEnviando(false);
+    }
   }
 
   return (
@@ -170,169 +133,187 @@ export function LeadForm() {
               noValidate
               className="flex flex-col gap-5 rounded-2xl border border-onyx-line bg-onyx-raised p-6 sm:p-8"
             >
-              <Campo
-                id="nome"
-                label="Nome"
-                erro={erros.nome}
-                input={
-                  <input
-                    id="nome"
-                    name="nome"
-                    type="text"
-                    autoComplete="name"
-                    enterKeyHint="next"
-                    placeholder="Como você se chama?"
-                    value={campos.nome}
-                    onChange={(e) => atualizar("nome", e.target.value)}
-                    aria-invalid={!!erros.nome}
-                    aria-describedby={erros.nome ? "nome-erro" : undefined}
-                    className={`${inputBase} ${
-                      erros.nome
-                        ? "border-dourado/60"
-                        : "border-onyx-line focus:border-dourado"
-                    }`}
-                  />
-                }
-              />
+              {/* Armadilha anti-bot: fora da tela, invisível pra leitor de tela
+                  e fora da navegação por teclado. Só robô preenche. */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -left-[9999px] h-0 w-0 overflow-hidden"
+              >
+                <label htmlFor="empresa">Empresa</label>
+                <input
+                  id="empresa"
+                  name="empresa"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                />
+              </div>
 
-              <Campo
-                id="whatsapp"
-                label="WhatsApp"
-                erro={erros.whatsapp}
-                input={
-                  <input
-                    id="whatsapp"
-                    name="whatsapp"
-                    type="tel"
-                    inputMode="numeric"
-                    autoComplete="tel-national"
-                    enterKeyHint="next"
-                    placeholder="(11) 91234-5678"
-                    value={campos.whatsapp}
-                    onChange={(e) =>
-                      atualizar("whatsapp", mascaraWhatsapp(e.target.value))
-                    }
-                    aria-invalid={!!erros.whatsapp}
-                    aria-describedby={
-                      erros.whatsapp ? "whatsapp-erro" : undefined
-                    }
-                    className={`${inputBase} ${
-                      erros.whatsapp
-                        ? "border-dourado/60"
-                        : "border-onyx-line focus:border-dourado"
-                    }`}
-                  />
-                }
-              />
+              <Campo id="nome" label="Nome" erro={erros.nome}>
+                <input
+                  id="nome"
+                  type="text"
+                  autoComplete="name"
+                  enterKeyHint="next"
+                  placeholder="Como você se chama?"
+                  value={campos.nome}
+                  onChange={(e) => atualizar("nome", e.target.value)}
+                  aria-invalid={!!erros.nome}
+                  aria-describedby={erros.nome ? "nome-erro" : undefined}
+                  className={classesCampo(!!erros.nome)}
+                />
+              </Campo>
 
-              <Campo
-                id="email"
-                label="E-mail"
-                erro={erros.email}
-                input={
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    enterKeyHint="next"
-                    placeholder="seuemail@exemplo.com"
-                    value={campos.email}
-                    onChange={(e) => atualizar("email", e.target.value)}
-                    aria-invalid={!!erros.email}
-                    aria-describedby={erros.email ? "email-erro" : undefined}
-                    className={`${inputBase} ${
-                      erros.email
-                        ? "border-dourado/60"
-                        : "border-onyx-line focus:border-dourado"
-                    }`}
-                  />
-                }
-              />
+              <Campo id="whatsapp" label="WhatsApp" erro={erros.whatsapp}>
+                <input
+                  id="whatsapp"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  enterKeyHint="next"
+                  placeholder="(11) 91234-5678"
+                  value={campos.whatsapp}
+                  onChange={(e) =>
+                    atualizar("whatsapp", mascaraWhatsapp(e.target.value))
+                  }
+                  aria-invalid={!!erros.whatsapp}
+                  aria-describedby={erros.whatsapp ? "whatsapp-erro" : undefined}
+                  className={classesCampo(!!erros.whatsapp)}
+                />
+              </Campo>
 
-              <Campo
-                id="idade"
-                label="Sua idade"
-                erro={erros.idade}
-                input={
-                  <select
-                    id="idade"
-                    name="idade"
-                    value={campos.idade}
-                    onChange={(e) => atualizar("idade", e.target.value)}
-                    aria-invalid={!!erros.idade}
-                    aria-describedby={erros.idade ? "idade-erro" : undefined}
-                    className={`${inputBase} ${
-                      campos.idade ? "text-marfim" : "text-marfim/30"
-                    } ${
-                      erros.idade
-                        ? "border-dourado/60"
-                        : "border-onyx-line focus:border-dourado"
-                    }`}
-                  >
-                    <option value="" disabled>
-                      Selecione sua faixa de idade
+              <Campo id="email" label="E-mail" erro={erros.email}>
+                <input
+                  id="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  enterKeyHint="next"
+                  placeholder="seuemail@exemplo.com"
+                  value={campos.email}
+                  onChange={(e) => atualizar("email", e.target.value)}
+                  aria-invalid={!!erros.email}
+                  aria-describedby={erros.email ? "email-erro" : undefined}
+                  className={classesCampo(!!erros.email)}
+                />
+              </Campo>
+
+              <Campo id="idade" label="Sua idade" erro={erros.idade}>
+                <select
+                  id="idade"
+                  value={campos.idade}
+                  onChange={(e) => atualizar("idade", e.target.value)}
+                  aria-invalid={!!erros.idade}
+                  aria-describedby={erros.idade ? "idade-erro" : undefined}
+                  className={`${classesCampo(!!erros.idade)} ${
+                    campos.idade ? "text-marfim" : "text-marfim/30"
+                  }`}
+                >
+                  <option value="" disabled>
+                    Selecione sua faixa de idade
+                  </option>
+                  {faixasIdade.map((faixa) => (
+                    <option key={faixa} value={faixa} className="text-marfim">
+                      {faixa} anos
                     </option>
-                    {faixasIdade.map((faixa) => (
-                      <option key={faixa} value={faixa} className="text-marfim">
-                        {faixa} anos
-                      </option>
-                    ))}
-                  </select>
-                }
-              />
+                  ))}
+                </select>
+              </Campo>
 
               <Campo
                 id="peso"
                 label="O que mais pesa pra você agora?"
                 erro={erros.peso}
-                input={
-                  <select
-                    id="peso"
-                    name="peso"
-                    value={campos.peso}
-                    onChange={(e) => atualizar("peso", e.target.value)}
-                    aria-invalid={!!erros.peso}
-                    aria-describedby={erros.peso ? "peso-erro" : undefined}
-                    className={`${inputBase} ${
-                      campos.peso ? "text-marfim" : "text-marfim/30"
-                    } ${
-                      erros.peso
-                        ? "border-dourado/60"
-                        : "border-onyx-line focus:border-dourado"
-                    }`}
-                  >
-                    <option value="" disabled>
-                      Selecione a opção mais parecida
+              >
+                <select
+                  id="peso"
+                  value={campos.peso}
+                  onChange={(e) => atualizar("peso", e.target.value)}
+                  aria-invalid={!!erros.peso}
+                  aria-describedby={erros.peso ? "peso-erro" : undefined}
+                  className={`${classesCampo(!!erros.peso)} ${
+                    campos.peso ? "text-marfim" : "text-marfim/30"
+                  }`}
+                >
+                  <option value="" disabled>
+                    Selecione a opção mais parecida
+                  </option>
+                  {opcoesPeso.map((opcao) => (
+                    <option key={opcao} value={opcao} className="text-marfim">
+                      {opcao}
                     </option>
-                    {opcoesPeso.map((opcao) => (
-                      <option key={opcao} value={opcao} className="text-marfim">
-                        {opcao}
-                      </option>
-                    ))}
-                  </select>
-                }
-              />
+                  ))}
+                </select>
+              </Campo>
 
               <Campo
                 id="contexto"
                 label="Quer contar mais?"
                 opcional
-                input={
-                  <textarea
-                    id="contexto"
-                    name="contexto"
-                    rows={3}
-                    maxLength={400}
-                    enterKeyHint="done"
-                    placeholder="Em uma ou duas frases, o que está acontecendo agora."
-                    value={campos.contexto}
-                    onChange={(e) => atualizar("contexto", e.target.value)}
-                    className={`${inputBase} resize-none border-onyx-line focus:border-dourado`}
+                erro={erros.contexto}
+              >
+                <textarea
+                  id="contexto"
+                  rows={3}
+                  maxLength={400}
+                  enterKeyHint="done"
+                  placeholder="Em uma ou duas frases, o que está acontecendo agora."
+                  value={campos.contexto}
+                  onChange={(e) => atualizar("contexto", e.target.value)}
+                  aria-invalid={!!erros.contexto}
+                  aria-describedby={erros.contexto ? "contexto-erro" : undefined}
+                  className={`${classesCampo(!!erros.contexto)} resize-none`}
+                />
+              </Campo>
+
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="consentimento"
+                  className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-marfim/70"
+                >
+                  <input
+                    id="consentimento"
+                    type="checkbox"
+                    checked={campos.consentimento}
+                    onChange={(e) =>
+                      atualizar("consentimento", e.target.checked)
+                    }
+                    aria-invalid={!!erros.consentimento}
+                    aria-describedby={
+                      erros.consentimento ? "consentimento-erro" : undefined
+                    }
+                    className="mt-0.5 h-5 w-5 shrink-0 accent-dourado"
                   />
-                }
-              />
+                  <span>
+                    Autorizo o contato da RUMO por WhatsApp e e-mail sobre a
+                    call de diagnóstico.{" "}
+                    <span className="text-marfim/40">
+                      Se você tem menos de 18 anos, confirme com seu
+                      responsável antes de enviar.
+                    </span>
+                  </span>
+                </label>
+                {erros.consentimento && (
+                  <p
+                    id="consentimento-erro"
+                    role="alert"
+                    className="text-sm text-dourado"
+                  >
+                    {erros.consentimento}
+                  </p>
+                )}
+              </div>
+
+              {falhaEnvio && (
+                <p
+                  role="alert"
+                  className="rounded-xl border border-dourado/40 bg-dourado/[0.07] p-4 text-sm leading-relaxed text-marfim"
+                >
+                  {falhaEnvio}
+                </p>
+              )}
 
               <button
                 type="submit"
@@ -359,13 +340,13 @@ function Campo({
   label,
   erro,
   opcional,
-  input,
+  children,
 }: {
   id: string;
   label: string;
   erro?: string;
   opcional?: boolean;
-  input: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -378,7 +359,7 @@ function Campo({
           <span className="text-xs font-normal text-marfim/35">(opcional)</span>
         )}
       </label>
-      {input}
+      {children}
       {erro && (
         <p id={`${id}-erro`} role="alert" className="text-sm text-dourado">
           {erro}

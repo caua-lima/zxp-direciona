@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RUMO — Landing page de captação
 
-## Getting Started
+LP da **RUMO**, mentoria de direção profissional, um braço da ZXP Solutions.
 
-First, run the development server:
+O objetivo da página é captar inscrições para a **call de diagnóstico** — não é
+página de venda. O fechamento acontece na conversa, e por isso o preço não
+aparece aqui.
+
+Stack: Next.js 16 (App Router) · TypeScript · Tailwind v4 · Supabase.
+
+---
+
+## Rodando local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre em http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Onde editar o conteúdo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| O quê | Arquivo |
+| --- | --- |
+| Nome e textos do plano | `src/config/plano.ts` |
+| Bio de quem conduz a mentoria | `src/config/mentor.ts` |
+| Regras de validação do lead | `src/lib/lead.ts` |
+| Seções da página | `src/components/` |
 
-## Learn More
+> ⚠️ `src/config/mentor.ts` ainda está com **placeholders**. Nenhum número,
+> resultado ou depoimento foi inventado — preencha com os dados reais antes de
+> divulgar a página.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Para onde vai o cadastro
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`Formulário → POST /api/leads → tabela no Supabase → e-mail de aviso`
 
-## Deploy on Vercel
+A rota fica em `src/app/api/leads/route.ts` e faz, nesta ordem:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Valida no servidor** com as mesmas regras do cliente (`src/lib/lead.ts`).
+   Validação só no navegador dá pra burlar com um `curl`.
+2. **Grava no Supabase.** Se falhar, a pessoa vê o erro — nunca um "recebido"
+   falso que faria o lead sumir em silêncio.
+3. **Avisa por e-mail** (Resend), com um botão que abre o WhatsApp da pessoa
+   com a mensagem já escrita. Se o e-mail falhar, o lead continua salvo.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Configuração (uma vez)
+
+**1. Supabase**
+
+- Crie um projeto em [supabase.com](https://supabase.com).
+- No **SQL Editor**, rode o conteúdo de [`supabase/schema.sql`](supabase/schema.sql).
+- Em **Project Settings → API**, copie a URL e a chave `service_role`.
+
+**2. Resend** (opcional — sem isso o lead salva, você só não recebe aviso)
+
+- Crie uma conta em [resend.com](https://resend.com), verifique um domínio e
+  gere uma API key.
+
+**3. Variáveis de ambiente**
+
+Copie `.env.example` para `.env.local` e preencha. Em produção, cadastre as
+mesmas em **Vercel → Settings → Environment Variables**.
+
+> Nenhuma variável tem `NEXT_PUBLIC_` no nome, e isso é proposital: qualquer
+> coisa com esse prefixo vai embutida no JavaScript que o visitante baixa. A
+> chave `service_role` dá acesso total ao banco e só pode existir no servidor.
+
+### Testando a rota sem preencher o formulário
+
+```bash
+curl -i -X POST http://localhost:3000/api/leads -H "Content-Type: application/json" -d '{"nome":"Teste","whatsapp":"(11) 91234-5678","email":"t@e.com","idade":"19 a 21","peso":"Outro","consentimento":true}'
+```
+
+Respostas esperadas: `200` sucesso · `422` dados inválidos · `503` Supabase não
+configurado · `502` banco recusou.
+
+---
+
+## Privacidade dos leads
+
+O público é de 16 a 25 anos, então **entra dado de menor de idade** — nome,
+telefone e um texto livre sobre o que está pesando na vida da pessoa. O projeto
+trata isso assim:
+
+- **Consentimento explícito** no formulário, com data gravada em
+  `consentimento_em` (LGPD).
+- **RLS ligado sem nenhuma policy** na tabela: as chaves públicas do Supabase
+  não leem nada. Só o servidor, com a `service_role`, acessa.
+- **Coleta mínima**: sem IP, sem user-agent, sem rastreamento de terceiros.
+
+Se um dia expor um painel de leads, ele precisa de autenticação de verdade —
+não basta uma URL difícil de adivinhar.
+
+---
+
+## Deploy
+
+Deploy na Vercel a partir da branch `main`. Lembre de cadastrar as variáveis de
+ambiente lá também — sem elas a rota responde `503` e nenhum cadastro é salvo.
