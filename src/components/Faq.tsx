@@ -16,6 +16,11 @@ const perguntas = [
       "Não é pra quem busca terapia ou acompanhamento clínico, nem pra quem quer receber uma resposta pronta sobre qual profissão seguir. A RUMO é método, acompanhamento e execução — a decisão continua sendo sua.",
   },
   {
+    pergunta: "Existe mais de um plano?",
+    resposta:
+      "Não. Existe só o RUMO Norte — um plano único, com tudo incluído. Nada de versão básica que entrega menos nem de versão premium pra empurrar depois: direção não funciona pela metade.",
+  },
+  {
     pergunta: "Como funciona o pagamento?",
     resposta:
       "É um investimento único, apresentado na call de diagnóstico de acordo com o seu momento. Não trabalhamos com parcelamento em múltiplas vezes. Nada é cobrado pra participar da call.",

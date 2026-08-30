@@ -1,5 +1,6 @@
 import { Section } from "./Section";
 import { Reveal } from "./Reveal";
+import { plano } from "@/config/plano";
 
 const itens = [
   {
@@ -34,11 +35,14 @@ const itens = [
 
 export function Included() {
   return (
-    <Section
-      eyebrow="O que está incluído"
-      title="O que você leva"
-      subtitle="Tudo isso faz parte do acompanhamento — não são módulos vendidos à parte."
-    >
+    <Section eyebrow={plano.chamada} title={plano.nome} subtitle={plano.descricao}>
+      <Reveal>
+        <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-dourado/25 bg-dourado/[0.06] px-4 py-1.5 text-xs font-semibold tracking-[0.14em] text-dourado uppercase">
+          <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-dourado" />
+          Plano único · sem níveis
+        </p>
+      </Reveal>
+
       <div className="grid gap-3 sm:grid-cols-2">
         {itens.map((item, i) => (
           <Reveal key={item.titulo} delay={i * 50}>
@@ -59,6 +63,12 @@ export function Included() {
           </Reveal>
         ))}
       </div>
+
+      <Reveal delay={120}>
+        <p className="mt-6 border-l-2 border-dourado pl-5 text-marfim/70">
+          {plano.notaInvestimento}
+        </p>
+      </Reveal>
     </Section>
   );
 }
