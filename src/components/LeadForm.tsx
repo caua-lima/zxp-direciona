@@ -287,7 +287,7 @@ export function LeadForm() {
                     className="mt-0.5 h-5 w-5 shrink-0 accent-dourado"
                   />
                   <span>
-                    Autorizo o contato da RUMO por WhatsApp e e-mail sobre a
+                    Autorizo o contato da ZXP Direciona por WhatsApp e e-mail sobre a
                     call de diagnóstico.{" "}
                     <span className="text-marfim/40">
                       Se você tem menos de 18 anos, confirme com seu

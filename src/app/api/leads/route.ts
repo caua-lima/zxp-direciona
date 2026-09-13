@@ -112,7 +112,7 @@ async function notificar(lead: Lead) {
 
   // Link que abre a conversa já endereçada: é o que faz você responder rápido.
   const saudacao = encodeURIComponent(
-    `Oi, ${lead.nome.split(" ")[0]}! Aqui é da RUMO. Vi seu cadastro e quero marcar sua call de diagnóstico.`,
+    `Oi, ${lead.nome.split(" ")[0]}! Aqui é da ZXP Direciona. Vi seu cadastro e quero marcar sua call de diagnóstico.`,
   );
   const linkWhatsapp = `https://wa.me/${whatsappInternacional(lead.whatsapp)}?text=${saudacao}`;
 
@@ -126,10 +126,10 @@ async function notificar(lead: Lead) {
       from: LEAD_NOTIFY_FROM,
       to: [LEAD_NOTIFY_TO],
       reply_to: lead.email,
-      subject: `RUMO: ${lead.nome} (${lead.idade}) — ${lead.peso}`,
+      subject: `ZXP Direciona: ${lead.nome} (${lead.idade}) — ${lead.peso}`,
       html: `
         <div style="font-family:system-ui,sans-serif;line-height:1.6;color:#10100E">
-          <h2 style="margin:0 0 16px">Novo cadastro na RUMO</h2>
+          <h2 style="margin:0 0 16px">Novo cadastro na ZXP Direciona</h2>
           <p style="margin:0 0 4px"><strong>Nome:</strong> ${escapar(lead.nome)}</p>
           <p style="margin:0 0 4px"><strong>Idade:</strong> ${escapar(lead.idade)} anos</p>
           <p style="margin:0 0 4px"><strong>WhatsApp:</strong> ${escapar(lead.whatsapp)}</p>

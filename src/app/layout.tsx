@@ -16,14 +16,14 @@ const inter = Inter({
 });
 
 // Troque pela URL real quando publicar (afeta OG tags e canonical).
-const siteUrl = "https://rumo.zxpsolutions.com.br";
+const siteUrl = "https://direciona.zxpsolutions.com.br";
 
 const descricao =
-  "RUMO é a mentoria de direção profissional da ZXP Solutions, para jovens de 16 a 25 anos travados entre faculdade, carreira e futuro. Agende sua call de diagnóstico gratuita.";
+  "ZXP Direciona é a mentoria de direção profissional da ZXP Solutions, para jovens de 16 a 25 anos travados entre faculdade, carreira e futuro. Agende sua call de diagnóstico gratuita.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "RUMO — Mentoria de Direção Profissional | ZXP Solutions",
+  title: "ZXP Direciona — Mentoria de Direção Profissional",
   description: descricao,
   keywords: [
     "mentoria profissional",
@@ -32,21 +32,21 @@ export const metadata: Metadata = {
     "escolha de carreira",
     "jovens carreira",
     "ZXP Solutions",
-    "RUMO",
+    "ZXP Direciona",
   ],
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
   openGraph: {
-    title: "RUMO — Mentoria de Direção Profissional",
+    title: "ZXP Direciona — Mentoria de Direção Profissional",
     description: descricao,
     url: siteUrl,
-    siteName: "RUMO",
+    siteName: "ZXP Direciona",
     locale: "pt_BR",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "RUMO — Mentoria de Direção Profissional",
+    title: "ZXP Direciona — Mentoria de Direção Profissional",
     description:
       "Você não precisa ter tudo resolvido. Precisa saber qual é o próximo passo.",
   },

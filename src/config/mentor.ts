@@ -11,12 +11,12 @@
  */
 export const mentor = {
   name: "[Nome do mentor]",
-  role: "[Como se apresenta — ex: Fundador da RUMO]",
+  role: "[Como se apresenta — ex: Fundador da ZXP Direciona]",
 
   /** Caminho da foto em /public. Deixe null pra manter o placeholder. */
   photoUrl: null as string | null,
 
-  bio: "[Bio curta: sua trajetória, o que te credencia a conduzir esse processo e por que você criou a RUMO. 3-4 frases, sem números inventados.]",
+  bio: "[Bio curta: sua trajetória, o que te credencia a conduzir esse processo e por que você criou a ZXP Direciona. 3-4 frases, sem números inventados.]",
 
   /** Credenciais reais — remova as que não usar. */
   highlights: [

@@ -6,19 +6,19 @@ import { Reveal } from "./Reveal";
 
 const perguntas = [
   {
-    pergunta: "Para quem é a RUMO?",
+    pergunta: "Para quem é a ZXP Direciona?",
     resposta:
       "Pra jovens de 16 a 25 anos que precisam de direção — na escolha da faculdade, numa virada de carreira ou na decisão do que fazer agora. Vale tanto pra quem não escolheu nada quanto pra quem escolheu e se arrependeu.",
   },
   {
     pergunta: "Para quem não é?",
     resposta:
-      "Não é pra quem busca terapia ou acompanhamento clínico, nem pra quem quer receber uma resposta pronta sobre qual profissão seguir. A RUMO é método, acompanhamento e execução — a decisão continua sendo sua.",
+      "Não é pra quem busca terapia ou acompanhamento clínico, nem pra quem quer receber uma resposta pronta sobre qual profissão seguir. A ZXP Direciona é método, acompanhamento e execução — a decisão continua sendo sua.",
   },
   {
     pergunta: "Existe mais de um plano?",
     resposta:
-      "Não. Existe só o RUMO Norte — um plano único, com tudo incluído. Nada de versão básica que entrega menos nem de versão premium pra empurrar depois: direção não funciona pela metade.",
+      "Não. Existe um único plano, o ZXP Direciona, com tudo incluído. Nada de versão básica que entrega menos nem de versão premium pra empurrar depois: direção não funciona pela metade.",
   },
   {
     pergunta: "Como funciona o pagamento?",
@@ -33,12 +33,12 @@ const perguntas = [
   {
     pergunta: "O que acontece na call de diagnóstico?",
     resposta:
-      "É uma conversa individual pra entender seu momento, apontar o que está travando e avaliar se a RUMO faz sentido pra você. Se não fizer, eu falo isso na hora. Sem compromisso e sem custo.",
+      "É uma conversa individual pra entender seu momento, apontar o que está travando e avaliar se a ZXP Direciona faz sentido pra você. Se não fizer, eu falo isso na hora. Sem compromisso e sem custo.",
   },
   {
-    pergunta: "A RUMO garante emprego ou uma renda específica?",
+    pergunta: "A ZXP Direciona garante emprego ou uma renda específica?",
     resposta:
-      "Não. A RUMO entrega método, direção e acompanhamento na execução. Não promete emprego, renda, aprovação nem a profissão perfeita — quem faz acontecer é você, com apoio.",
+      "Não. A ZXP Direciona entrega método, direção e acompanhamento na execução. Não promete emprego, renda, aprovação nem a profissão perfeita — quem faz acontecer é você, com apoio.",
   },
   {
     pergunta: "Preciso já saber o que quero pra participar?",

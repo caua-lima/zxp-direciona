@@ -1,6 +1,7 @@
-# RUMO — Landing page de captação
+# ZXP Direciona — Landing page de captação
 
-LP da **RUMO**, mentoria de direção profissional, um braço da ZXP Solutions.
+LP da **ZXP Direciona**, mentoria de direção profissional da ZXP Solutions.
+Renomeada em 2026-09-13 (antigo nome: RUMO).
 
 O objetivo da página é captar inscrições para a **call de diagnóstico** — não é
 página de venda. O fechamento acontece na conversa, e por isso o preço não

@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const alt =
-  "RUMO — Mentoria de Direção Profissional, um braço da ZXP Solutions";
+  "ZXP Direciona — Mentoria de Direção Profissional, da ZXP Solutions";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -37,15 +37,28 @@ export default function OpengraphImage() {
           >
             Z
           </div>
-          <div
-            style={{
-              color: "#F6F3E8",
-              fontSize: 26,
-              fontWeight: 700,
-              letterSpacing: 6,
-            }}
-          >
-            RUMO
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div
+              style={{
+                color: "#F4B942",
+                fontSize: 14,
+                fontWeight: 700,
+                letterSpacing: 6,
+              }}
+            >
+              ZXP
+            </div>
+            <div
+              style={{
+                color: "#F6F3E8",
+                fontSize: 24,
+                fontWeight: 700,
+                letterSpacing: 3,
+                marginTop: 2,
+              }}
+            >
+              DIRECIONA
+            </div>
           </div>
         </div>
 
@@ -85,7 +98,7 @@ export default function OpengraphImage() {
           }}
         >
           <div style={{ display: "flex" }}>Mentoria de direção profissional</div>
-          <div style={{ display: "flex" }}>um braço da ZXP Solutions</div>
+          <div style={{ display: "flex" }}>ZXP Solutions</div>
         </div>
       </div>
     ),

@@ -1,28 +1,38 @@
-# Briefing — micro-CRM da RUMO (Fase 2)
+# Briefing — micro-CRM da ZXP Direciona (Fase 2)
 
 Documento de contexto para quem vai construir o painel de leads. Leia inteiro
 antes de escrever código.
+
+> **Nota de histórico:** este projeto se chamava **RUMO** até 13/09/2026, quando
+> foi renomeado para **ZXP Direciona**. O repositório GitHub e a pasta local
+> também foram renomeados de `rumo-lp` para `zxp-direciona`. Se encontrar
+> "RUMO" em algum lugar do código, do Supabase ou de um e-mail antigo, é
+> resquício do nome anterior — corrija para ZXP Direciona ao esbarrar nisso.
 
 ---
 
 ## 1. O projeto
 
-**RUMO** é uma mentoria de direção profissional 1:1, para jovens de 16 a 25 anos
-travados entre faculdade, carreira e futuro. É um braço da **ZXP Solutions**.
+**ZXP Direciona** é uma mentoria de direção profissional 1:1, para jovens de 16
+a 25 anos travados entre faculdade, carreira e futuro. É um produto da **ZXP
+Solutions**.
 
 Este repositório é a **landing page de captação**. Ela não vende: capta
 inscrições para uma **call de diagnóstico** gratuita, e o fechamento acontece na
 conversa. Por isso não existe preço na página nem botão de compra.
 
-O plano é **único**, chamado **RUMO Norte** — não existe Gold/Platinum e não se
-deve criar níveis.
+O plano é **único** — o próprio "ZXP Direciona" (não existe Gold/Platinum e não
+se deve criar níveis). Ver `src/config/plano.ts`.
 
 Stack: **Next.js 16 (App Router) · TypeScript · Tailwind v4 · Supabase**.
-Deploy na Vercel, branch `main` → https://rumo-lp.vercel.app
+Deploy na Vercel, branch `main`. A URL de produção pode continuar em
+`rumo-lp.vercel.app` (renomear o projeto na Vercel é manual, no dashboard) —
+não assuma que a URL bate com o nome atual do produto.
 
 > ⚠️ **PRONIX é outra empresa do mesmo dono** (produtos "Pronix Performance" e
-> "Acelera"). A RUMO **não** pertence à PRONIX. Não misture as marcas e não
-> altere a assinatura "um braço da ZXP Solutions".
+> "Acelera"). A ZXP Direciona **não** pertence à PRONIX — o nome só *imita o
+> estilo* de nomenclatura da PRONIX (marca-mãe + palavra de ação), por escolha
+> de gosto do dono, não por vínculo societário. Não misture as marcas.
 
 ---
 

@@ -28,7 +28,7 @@ export function Hero() {
         </h1>
 
         <p className="mt-7 max-w-xl text-lg leading-relaxed text-marfim/70 sm:text-xl">
-          A RUMO é um processo individual pra quem está travado entre faculdade,
+          A ZXP Direciona é um processo individual pra quem está travado entre faculdade,
           carreira e futuro. Sem fórmula pronta — direção construída com a sua
           realidade.
         </p>

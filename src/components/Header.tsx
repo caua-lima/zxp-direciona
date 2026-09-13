@@ -25,10 +25,10 @@ export function Header() {
         {/* min-h-11 (44px) garante alvo de toque confortável no celular */}
         <a
           href="#top"
-          aria-label="RUMO — início"
+          aria-label="ZXP Direciona — início"
           className="-mx-2 flex min-h-11 items-center rounded-lg px-2"
         >
-          <Logo compact />
+          <Logo />
         </a>
 
         <a

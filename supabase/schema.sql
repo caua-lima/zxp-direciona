@@ -1,4 +1,4 @@
--- Tabela de leads da RUMO.
+-- Tabela de leads da ZXP Direciona.
 -- Rode isto no SQL Editor do Supabase (uma vez só).
 
 create table if not exists public.leads (
