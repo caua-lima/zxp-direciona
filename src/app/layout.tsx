@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Inter } from "next/font/google";
+import { site } from "@/config/site";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -15,19 +16,20 @@ const inter = Inter({
   display: "swap",
 });
 
-// URL que está de fato servindo o site hoje (confirmado por HTTP 200 em
-// 17/09/2026). O domínio próprio "direciona.zxpsolutions.com.br" usado antes
-// aqui era só um placeholder — nunca chegou a ser registrado/configurado, e
-// apontar o canonical pra um domínio que não resolve é pior que não ter
-// canonical nenhum. Troque para o domínio definitivo assim que existir.
-const siteUrl = "https://rumo-lp.vercel.app";
+// A URL vem de src/config/site.ts — fonte única, não duplique aqui.
+const siteUrl = site.urlPublica;
 
 const descricao =
   "ZXP Direciona é a mentoria de direção profissional da ZXP Solutions, para jovens de 16 a 25 anos travados entre faculdade, carreira e futuro. Agende sua call de diagnóstico gratuita.";
 
+// A Vercel injeta VERCEL_ENV automaticamente ("production" | "preview" |
+// "development"). Só a produção de verdade é indexável — uma preview de PR
+// ou o domínio provisório de um branch não deveriam aparecer no Google.
+const emProducao = process.env.VERCEL_ENV === "production";
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "ZXP Direciona — Mentoria de Direção Profissional",
+  title: site.tituloCompleto,
   description: descricao,
   keywords: [
     "mentoria profissional",
@@ -39,18 +41,18 @@ export const metadata: Metadata = {
     "ZXP Direciona",
   ],
   alternates: { canonical: "/" },
-  robots: { index: true, follow: true },
+  robots: { index: emProducao, follow: true },
   openGraph: {
-    title: "ZXP Direciona — Mentoria de Direção Profissional",
+    title: site.tituloCompleto,
     description: descricao,
     url: siteUrl,
-    siteName: "ZXP Direciona",
+    siteName: site.nome,
     locale: "pt_BR",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "ZXP Direciona — Mentoria de Direção Profissional",
+    title: site.tituloCompleto,
     description:
       "Você não precisa ter tudo resolvido. Precisa saber qual é o próximo passo.",
   },

@@ -6,12 +6,21 @@ import {
   faixasIdade,
   opcoesPeso,
   mascaraWhatsapp,
+  whatsappInternacional,
   validarLead,
   leadVazio,
   ehMenorDeIdade,
   type Lead,
   type ErrosLead,
 } from "@/lib/lead";
+import { contatoComercial } from "@/config/site";
+
+// null enquanto o WhatsApp comercial não for preenchido em
+// src/config/site.ts — nesse caso o link some das telas abaixo em vez de
+// apontar pra um número que não existe.
+const linkWhatsappComercial = contatoComercial.whatsapp
+  ? `https://wa.me/${whatsappInternacional(contatoComercial.whatsapp)}`
+  : null;
 
 const inputBase =
   "w-full rounded-xl border bg-onyx px-4 py-3.5 text-marfim transition placeholder:text-marfim/30 focus:outline-none";
@@ -152,6 +161,16 @@ export function LeadForm() {
               <p className="mt-4 text-sm text-marfim/40">
                 Se preferir, deixe o número salvo — a conversa começa por lá.
               </p>
+              {linkWhatsappComercial && (
+                <a
+                  href={linkWhatsappComercial}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-5 inline-block text-sm font-semibold text-dourado underline underline-offset-4"
+                >
+                  Ou chama a gente primeiro, no WhatsApp
+                </a>
+              )}
             </div>
           ) : (
             <form
@@ -372,12 +391,22 @@ export function LeadForm() {
               )}
 
               {falhaEnvio && (
-                <p
+                <div
                   role="alert"
                   className="rounded-xl border border-dourado/40 bg-dourado/[0.07] p-4 text-sm leading-relaxed text-marfim"
                 >
-                  {falhaEnvio}
-                </p>
+                  <p>{falhaEnvio}</p>
+                  {linkWhatsappComercial && (
+                    <a
+                      href={linkWhatsappComercial}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-block font-semibold text-dourado underline underline-offset-4"
+                    >
+                      Chamar direto no WhatsApp
+                    </a>
+                  )}
+                </div>
               )}
 
               <button

@@ -32,14 +32,17 @@ Abre em http://localhost:3000.
 
 | O quê | Arquivo |
 | --- | --- |
+| Marca, URL pública, WhatsApp comercial, privacidade | `src/config/site.ts` |
 | Nome e textos do plano | `src/config/plano.ts` |
 | Bio de quem conduz a mentoria | `src/config/mentor.ts` |
 | Regras de validação do lead | `src/lib/lead.ts` |
 | Seções da página | `src/components/` |
 
-> ⚠️ `src/config/mentor.ts` ainda está com **placeholders**. Nenhum número,
-> resultado ou depoimento foi inventado — preencha com os dados reais antes de
-> divulgar a página.
+> ⚠️ `src/config/mentor.ts` e partes de `src/config/site.ts` ainda estão com
+> **placeholders**. Nenhum número, resultado ou depoimento foi inventado —
+> preencha com os dados reais antes de divulgar a página. Rode
+> `npm run check:launch` pra ver exatamente o que falta (ver
+> [`docs/CONFIGURACAO-E-LANCAMENTO.md`](docs/CONFIGURACAO-E-LANCAMENTO.md)).
 
 ---
 
