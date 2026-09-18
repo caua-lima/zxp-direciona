@@ -2,6 +2,7 @@ import {
   normalizarLead,
   validarLead,
   whatsappInternacional,
+  mascaraWhatsapp,
   type Lead,
 } from "@/lib/lead";
 
@@ -132,7 +133,7 @@ async function notificar(lead: Lead) {
           <h2 style="margin:0 0 16px">Novo cadastro na ZXP Direciona</h2>
           <p style="margin:0 0 4px"><strong>Nome:</strong> ${escapar(lead.nome)}</p>
           <p style="margin:0 0 4px"><strong>Idade:</strong> ${escapar(lead.idade)} anos</p>
-          <p style="margin:0 0 4px"><strong>WhatsApp:</strong> ${escapar(lead.whatsapp)}</p>
+          <p style="margin:0 0 4px"><strong>WhatsApp:</strong> ${escapar(mascaraWhatsapp(lead.whatsapp))}</p>
           <p style="margin:0 0 4px"><strong>E-mail:</strong> ${escapar(lead.email)}</p>
           <p style="margin:0 0 4px"><strong>O que mais pesa:</strong> ${escapar(lead.peso)}</p>
           ${

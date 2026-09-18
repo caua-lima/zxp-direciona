@@ -44,9 +44,34 @@ export const leadVazio: Lead = {
   consentimento: false,
 };
 
+/**
+ * Extrai o número NACIONAL (DDD + assinante, 10 ou 11 dígitos), removendo um
+ * DDI +55 quando ele existir.
+ *
+ * O DDD 55 é real (Caxias do Sul/RS) — não dá pra distinguir "DDI 55" de
+ * "DDD 55" olhando só os dois primeiros dígitos. A distinção é o
+ * COMPRIMENTO: um número nacional puro tem no máximo 11 dígitos; só cortamos
+ * o "55" da frente quando sobram 12-13 dígitos no total, o que só acontece
+ * quando ele é mesmo um DDI.
+ *
+ * Limitação conhecida e aceita: se a pessoa digitar o DDI manualmente dígito
+ * por dígito (em vez de colar o número completo de uma vez), a máscara só
+ * reconhece o DDI a partir do 12º dígito. Colar o número (o caso real que
+ * gerava o bug) funciona corretamente porque chega tudo de uma vez.
+ */
+export function extrairDigitosNacionais(valor: string): string {
+  const digitos = valor.replace(/\D/g, "");
+
+  if ((digitos.length === 12 || digitos.length === 13) && digitos.startsWith("55")) {
+    return digitos.slice(2);
+  }
+
+  return digitos;
+}
+
 /** Formata o número como (00) 00000-0000 enquanto a pessoa digita. */
 export function mascaraWhatsapp(valor: string) {
-  const digitos = valor.replace(/\D/g, "").slice(0, 11);
+  const digitos = extrairDigitosNacionais(valor).slice(0, 11);
 
   if (digitos.length <= 2) return digitos;
   if (digitos.length <= 6) return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
@@ -58,7 +83,7 @@ export function mascaraWhatsapp(valor: string) {
 
 /** Só os dígitos, no formato que o link do WhatsApp espera (55 + DDD + número). */
 export function whatsappInternacional(valor: string) {
-  return `55${valor.replace(/\D/g, "")}`;
+  return `55${extrairDigitosNacionais(valor)}`;
 }
 
 export function validarLead(campos: Lead): ErrosLead {
@@ -70,8 +95,19 @@ export function validarLead(campos: Lead): ErrosLead {
     erros.nome = "Nome muito longo.";
   }
 
-  const digitos = campos.whatsapp.replace(/\D/g, "");
-  if (digitos.length < 10 || digitos.length > 11) {
+  const nacional = extrairDigitosNacionais(campos.whatsapp);
+  const ddd = Number(nacional.slice(0, 2));
+  // Nono dígito "9" é obrigatório em número de celular (11 dígitos); número
+  // fixo tem 10. Checagem de formato plausível — não confirma que a conta
+  // WhatsApp existe ou está ativa.
+  const formatoPlausivel =
+    (nacional.length === 10 || nacional.length === 11) &&
+    ddd >= 11 &&
+    ddd <= 99 &&
+    !(nacional.length === 11 && nacional[2] !== "9") &&
+    new Set(nacional).size > 1;
+
+  if (!formatoPlausivel) {
     erros.whatsapp = "Coloca o WhatsApp com DDD, ex: (11) 91234-5678.";
   }
 
@@ -110,7 +146,10 @@ export function normalizarLead(body: unknown): Lead {
 
   return {
     nome: texto(b.nome),
-    whatsapp: texto(b.whatsapp),
+    // Canônico (só dígitos nacionais) — a formatação "(11) 91234-5678" é
+    // responsabilidade só da UI, pra não gravar o mesmo telefone de formas
+    // diferentes no banco dependendo de como a pessoa digitou.
+    whatsapp: extrairDigitosNacionais(texto(b.whatsapp)),
     email: texto(b.email).toLowerCase(),
     idade: texto(b.idade),
     peso: texto(b.peso),

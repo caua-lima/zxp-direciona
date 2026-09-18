@@ -124,7 +124,8 @@ preciso migração.
 id                uuid        pk, default gen_random_uuid()
 criado_em         timestamptz default now()
 nome              text        not null
-whatsapp          text        not null   -- formatado: (11) 91234-5678
+whatsapp          text        not null   -- canônico, só dígitos nacionais: "11912345678"
+                                          -- (formate com mascaraWhatsapp() de src/lib/lead.ts pra exibir)
 email             text        not null
 idade             text        not null   -- "16 a 18" | "19 a 21" | "22 a 25" | "26 ou mais"
 peso              text        not null   -- opção escolhida no formulário
