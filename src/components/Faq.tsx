@@ -84,11 +84,15 @@ export function Faq() {
                   </button>
                 </h3>
 
-                {/* grid 0fr→1fr anima a altura mantendo o texto no DOM (bom pra SEO) */}
+                {/* grid 0fr→1fr anima a altura mantendo o texto no DOM (bom pra
+                    SEO). aria-hidden quando fechado é o que garante que um
+                    leitor de tela não anuncie a resposta antes de ela abrir —
+                    overflow:hidden sozinho nem sempre basta pra isso. */}
                 <div
                   id={`faq-painel-${i}`}
                   role="region"
                   aria-labelledby={`faq-botao-${i}`}
+                  aria-hidden={!isOpen}
                   className="grid transition-all duration-300 ease-out"
                   style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
                 >

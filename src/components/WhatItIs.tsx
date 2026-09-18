@@ -27,7 +27,7 @@ export function WhatItIs() {
       <div className="grid gap-5 sm:grid-cols-2">
         <Reveal>
           <div className="h-full rounded-2xl border border-onyx-line bg-onyx-raised p-6 sm:p-7">
-            <p className="mb-5 text-xs font-semibold tracking-[0.16em] text-marfim/40 uppercase">
+            <p className="mb-5 text-xs font-semibold tracking-[0.16em] text-marfim/55 uppercase">
               O que não é
             </p>
             <ul className="flex flex-col gap-3.5">

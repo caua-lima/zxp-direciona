@@ -23,7 +23,7 @@ const linkWhatsappComercial = contatoComercial.whatsapp
   : null;
 
 const inputBase =
-  "w-full rounded-xl border bg-onyx px-4 py-3.5 text-marfim transition placeholder:text-marfim/30 focus:outline-none";
+  "w-full rounded-xl border bg-onyx px-4 py-3.5 text-marfim transition placeholder:text-marfim/45 focus:outline-none";
 
 function classesCampo(temErro: boolean) {
   return `${inputBase} ${
@@ -158,7 +158,7 @@ export function LeadForm() {
                 <strong className="text-marfim">{campos.whatsapp}</strong> pra
                 combinar o horário da sua call de diagnóstico.
               </p>
-              <p className="mt-4 text-sm text-marfim/40">
+              <p className="mt-4 text-sm text-marfim/55">
                 Se preferir, deixe o número salvo — a conversa começa por lá.
               </p>
               {linkWhatsappComercial && (
@@ -258,7 +258,7 @@ export function LeadForm() {
                   aria-invalid={!!erros.idade}
                   aria-describedby={erros.idade ? "idade-erro" : undefined}
                   className={`${classesCampo(!!erros.idade)} ${
-                    campos.idade ? "text-marfim" : "text-marfim/30"
+                    campos.idade ? "text-marfim" : "text-marfim/55"
                   }`}
                 >
                   <option value="" disabled>
@@ -284,7 +284,7 @@ export function LeadForm() {
                   aria-invalid={!!erros.peso}
                   aria-describedby={erros.peso ? "peso-erro" : undefined}
                   className={`${classesCampo(!!erros.peso)} ${
-                    campos.peso ? "text-marfim" : "text-marfim/30"
+                    campos.peso ? "text-marfim" : "text-marfim/55"
                   }`}
                 >
                   <option value="" disabled>
@@ -417,7 +417,7 @@ export function LeadForm() {
                 {enviando ? "Enviando…" : "Quero conversar"}
               </button>
 
-              <p className="text-center text-xs leading-relaxed text-marfim/40">
+              <p className="text-center text-xs leading-relaxed text-marfim/55">
                 Seus dados são usados só pra entrar em contato sobre a call.
                 Nada de spam, nada compartilhado com terceiros.
               </p>
@@ -450,7 +450,7 @@ function Campo({
       >
         {label}
         {opcional && (
-          <span className="text-xs font-normal text-marfim/35">(opcional)</span>
+          <span className="text-xs font-normal text-marfim/55">(opcional)</span>
         )}
       </label>
       {children}
