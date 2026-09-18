@@ -9,15 +9,13 @@ aparece aqui.
 
 Stack: Next.js 16 (App Router) · TypeScript · Tailwind v4 · Supabase.
 
-> ⚠️ **17/09/2026 — captação fora do ar.** O projeto Supabase referenciado em
-> `.env.local` não resolve mais no DNS (`oorzledmqgsqqsuzurck.supabase.co` →
-> domínio inexistente) — foi deletado ou a URL nunca esteve certa. Até isso
-> ser resolvido no [dashboard do Supabase](https://supabase.com/dashboard) e
-> as variáveis serem atualizadas, todo cadastro válido falha com `502`. Depois
-> de apontar pra um projeto que existe, rode `supabase/schema.sql` (projeto
-> novo) ou as migrações em `supabase/migrations/`, em ordem (projeto que já
-> tinha a tabela `leads`). Apague este aviso quando confirmar um lead de teste
-> salvo.
+> O aviso que esteve aqui (projeto Supabase pausado, captação fora do ar) foi
+> resolvido em 18/09/2026 — o Cauã reativou o projeto no dashboard. Testado
+> de ponta a ponta contra o banco real: cadastro grava, idempotência não
+> duplica em retry (3 tentativas com a mesma chave → 1 linha só), rate limit
+> barra na 6ª tentativa em 10 min. `RESEND_API_KEY` segue vazia em
+> `.env.local` — o aviso por e-mail está desligado até isso ser preenchido
+> (o cadastro em si não depende disso).
 
 ---
 
