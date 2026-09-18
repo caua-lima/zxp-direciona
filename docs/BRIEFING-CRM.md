@@ -104,7 +104,7 @@ Sem isso o lead ainda é salvo — ele só não recebe aviso.
 ```bash
 curl -i -X POST http://localhost:3000/api/leads \
   -H "Content-Type: application/json" \
-  -d '{"nome":"Teste","whatsapp":"(11) 91234-5678","email":"t@e.com","idade":"19 a 21","peso":"Outro","consentimento":true}'
+  -d '{"nome":"Teste","whatsapp":"(11) 91234-5678","email":"t@e.com","idade":"18 a 21","peso":"Outro","consentimento":true}'
 ```
 
 Esperado: `200 {"ok":true}`, uma linha nova na tabela `leads` do Supabase e um
@@ -117,8 +117,11 @@ produção.
 
 ## 4. A tabela `leads`
 
-Já criada por `supabase/schema.sql`. As colunas de CRM **já existem** — não é
-preciso migração.
+Já criada por `supabase/schema.sql` (instalação nova). Se sua tabela já
+existia antes de 17/09/2026, rode `supabase/migrations/0001_confirmacao_responsavel.sql`
+uma vez — daqui pra frente, toda mudança de schema vira um arquivo novo nessa
+pasta em vez de editar o `CREATE TABLE`. As colunas de CRM (`status`,
+`observacoes`) já existem desde o início — não é preciso migração pra elas.
 
 ```
 id                uuid        pk, default gen_random_uuid()
@@ -127,7 +130,10 @@ nome              text        not null
 whatsapp          text        not null   -- canônico, só dígitos nacionais: "11912345678"
                                           -- (formate com mascaraWhatsapp() de src/lib/lead.ts pra exibir)
 email             text        not null
-idade             text        not null   -- "16 a 18" | "19 a 21" | "22 a 25" | "26 ou mais"
+idade             text        not null   -- "16 a 17" | "18 a 21" | "22 a 25" | "26 ou mais"
+                                          -- (leads antigos podem ter "16 a 18" — faixa
+                                          -- descontinuada, não reclassificar, ver migração 0001)
+confirmacao_responsavel boolean not null -- só relevante/true quando idade = "16 a 17"
 peso              text        not null   -- opção escolhida no formulário
 contexto          text        nullable   -- texto livre, opcional, até 400 chars
 consentimento_em  timestamptz not null   -- prova de consentimento (LGPD)

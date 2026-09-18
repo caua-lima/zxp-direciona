@@ -1,5 +1,11 @@
 -- Tabela de leads da ZXP Direciona.
--- Rode isto no SQL Editor do Supabase (uma vez só).
+--
+-- Instalação NOVA (tabela ainda não existe): rode este arquivo inteiro no SQL
+-- Editor do Supabase, uma vez.
+--
+-- Tabela JÁ EXISTE (você já tem leads gravados): NÃO rode este arquivo de
+-- novo — `create table if not exists` não adiciona colunas numa tabela que já
+-- existe. Rode as migrações em `supabase/migrations/`, em ordem, uma vez cada.
 
 create table if not exists public.leads (
   id uuid primary key default gen_random_uuid(),
@@ -16,6 +22,11 @@ create table if not exists public.leads (
   -- guardar QUANDO a pessoa autorizou o contato não é burocracia: é o que
   -- sustenta o tratamento do dado caso alguém questione.
   consentimento_em timestamptz not null,
+
+  -- Só é true quando faz sentido (idade = "16 a 17"); pra 18+ fica sempre
+  -- false e não significa nada — não é assinatura de responsável, é a
+  -- confirmação que a PESSOA que preencheu marcou no formulário.
+  confirmacao_responsavel boolean not null default false,
 
   -- Campos do micro-CRM (fase 2). Já existem pra não precisar de migração.
   status text not null default 'novo'

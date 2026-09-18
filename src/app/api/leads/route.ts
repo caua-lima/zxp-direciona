@@ -77,6 +77,7 @@ export async function POST(request: Request) {
         peso: lead.peso,
         contexto: lead.contexto || null,
         consentimento_em: new Date().toISOString(),
+        confirmacao_responsavel: lead.confirmacaoResponsavel,
       }),
     });
 

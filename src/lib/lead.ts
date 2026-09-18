@@ -6,12 +6,20 @@
  * então as regras não podem divergir com o tempo.
  */
 
+// "16 a 17" fica isolada de propósito: é a única faixa de menor de idade, e
+// precisa disparar a confirmação extra de responsável abaixo. Juntar menor e
+// maior numa faixa só ("16 a 18", como era antes) impedia aplicar qualquer
+// regra diferente por faixa.
 export const faixasIdade = [
-  "16 a 18",
-  "19 a 21",
+  "16 a 17",
+  "18 a 21",
   "22 a 25",
   "26 ou mais",
 ] as const;
+
+export function ehMenorDeIdade(faixa: string): boolean {
+  return faixa === "16 a 17";
+}
 
 export const opcoesPeso = [
   "Não sei qual curso ou carreira escolher",
@@ -30,6 +38,12 @@ export type Lead = {
   peso: string;
   contexto: string;
   consentimento: boolean;
+  /**
+   * Só é exigido (e só faz sentido) quando `idade` é "16 a 17" — confirmação
+   * de que um responsável está ciente do cadastro. Pra 18+ fica sempre false
+   * e não bloqueia nada.
+   */
+  confirmacaoResponsavel: boolean;
 };
 
 export type ErrosLead = Partial<Record<keyof Lead, string>>;
@@ -42,6 +56,7 @@ export const leadVazio: Lead = {
   peso: "",
   contexto: "",
   consentimento: false,
+  confirmacaoResponsavel: false,
 };
 
 /**
@@ -132,6 +147,11 @@ export function validarLead(campos: Lead): ErrosLead {
     erros.consentimento = "Precisa autorizar o contato pra gente conversar.";
   }
 
+  if (ehMenorDeIdade(campos.idade) && !campos.confirmacaoResponsavel) {
+    erros.confirmacaoResponsavel =
+      "Pra quem tem 16-17 anos, precisamos que um responsável esteja ciente.";
+  }
+
   return erros;
 }
 
@@ -155,5 +175,6 @@ export function normalizarLead(body: unknown): Lead {
     peso: texto(b.peso),
     contexto: texto(b.contexto),
     consentimento: b.consentimento === true,
+    confirmacaoResponsavel: b.confirmacaoResponsavel === true,
   };
 }

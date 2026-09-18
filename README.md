@@ -73,7 +73,7 @@ mesmas em **Vercel → Settings → Environment Variables**.
 ### Testando a rota sem preencher o formulário
 
 ```bash
-curl -i -X POST http://localhost:3000/api/leads -H "Content-Type: application/json" -d '{"nome":"Teste","whatsapp":"(11) 91234-5678","email":"t@e.com","idade":"19 a 21","peso":"Outro","consentimento":true}'
+curl -i -X POST http://localhost:3000/api/leads -H "Content-Type: application/json" -d '{"nome":"Teste","whatsapp":"(11) 91234-5678","email":"t@e.com","idade":"18 a 21","peso":"Outro","consentimento":true}'
 ```
 
 Respostas esperadas: `200` sucesso · `422` dados inválidos · `503` Supabase não

@@ -8,6 +8,7 @@ import {
   mascaraWhatsapp,
   validarLead,
   leadVazio,
+  ehMenorDeIdade,
   type Lead,
   type ErrosLead,
 } from "@/lib/lead";
@@ -204,7 +205,12 @@ export function LeadForm() {
                 <select
                   id="idade"
                   value={campos.idade}
-                  onChange={(e) => atualizar("idade", e.target.value)}
+                  onChange={(e) => {
+                    atualizar("idade", e.target.value);
+                    // Troca de faixa reseta a confirmação de responsável —
+                    // evita carregar um "sim" que valia pra outra faixa.
+                    atualizar("confirmacaoResponsavel", false);
+                  }}
                   aria-invalid={!!erros.idade}
                   aria-describedby={erros.idade ? "idade-erro" : undefined}
                   className={`${classesCampo(!!erros.idade)} ${
@@ -287,12 +293,8 @@ export function LeadForm() {
                     className="mt-0.5 h-5 w-5 shrink-0 accent-dourado"
                   />
                   <span>
-                    Autorizo o contato da ZXP Direciona por WhatsApp e e-mail sobre a
-                    call de diagnóstico.{" "}
-                    <span className="text-marfim/40">
-                      Se você tem menos de 18 anos, confirme com seu
-                      responsável antes de enviar.
-                    </span>
+                    Autorizo o contato da ZXP Direciona por WhatsApp e e-mail
+                    sobre a call de diagnóstico.
                   </span>
                 </label>
                 {erros.consentimento && (
@@ -305,6 +307,44 @@ export function LeadForm() {
                   </p>
                 )}
               </div>
+
+              {ehMenorDeIdade(campos.idade) && (
+                <div className="flex flex-col gap-2 rounded-xl border border-dourado/25 bg-dourado/[0.05] p-4">
+                  <label
+                    htmlFor="confirmacaoResponsavel"
+                    className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-marfim/80"
+                  >
+                    <input
+                      id="confirmacaoResponsavel"
+                      type="checkbox"
+                      checked={campos.confirmacaoResponsavel}
+                      onChange={(e) =>
+                        atualizar("confirmacaoResponsavel", e.target.checked)
+                      }
+                      aria-invalid={!!erros.confirmacaoResponsavel}
+                      aria-describedby={
+                        erros.confirmacaoResponsavel
+                          ? "confirmacaoResponsavel-erro"
+                          : undefined
+                      }
+                      className="mt-0.5 h-5 w-5 shrink-0 accent-dourado"
+                    />
+                    <span>
+                      Como você tem 16 ou 17 anos, confirmo que um responsável
+                      está ciente deste cadastro e de acordo com o contato.
+                    </span>
+                  </label>
+                  {erros.confirmacaoResponsavel && (
+                    <p
+                      id="confirmacaoResponsavel-erro"
+                      role="alert"
+                      className="text-sm text-dourado"
+                    >
+                      {erros.confirmacaoResponsavel}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {falhaEnvio && (
                 <p
