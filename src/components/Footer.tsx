@@ -1,4 +1,6 @@
 import { ZMark } from "./ZWatermark";
+import { PreferenciasMedicao } from "./PreferenciasMedicao";
+import { trackingAtivo } from "@/config/tracking";
 
 export function Footer() {
   return (
@@ -13,6 +15,9 @@ export function Footer() {
         <p className="text-xs text-marfim/55">
           © {new Date().getFullYear()} ZXP Solutions
         </p>
+        {/* Só aparece se houver medição configurada — sem ID nenhum não há
+            o que revogar. */}
+        {trackingAtivo && <PreferenciasMedicao />}
       </div>
     </footer>
   );

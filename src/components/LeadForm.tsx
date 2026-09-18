@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Reveal } from "./Reveal";
 import {
   faixasIdade,
@@ -14,6 +14,8 @@ import {
   type ErrosLead,
 } from "@/lib/lead";
 import { contatoComercial } from "@/config/site";
+import { capturarAtribuicao, type Atribuicao } from "@/lib/atribuicao";
+import { track } from "@/lib/tracking/events";
 
 // null enquanto o WhatsApp comercial não for preenchido em
 // src/config/site.ts — nesse caso o link some das telas abaixo em vez de
@@ -42,6 +44,22 @@ export function LeadForm() {
   // preguiçoso do useState, não recria a cada render) e reusada em todo
   // retry, pra um reenvio depois de falha nunca virar um segundo lead.
   const [idempotencyKey] = useState(() => crypto.randomUUID());
+  // Origem lida da URL assim que o formulário monta (a query sobrevive a
+  // reload; nada é guardado no aparelho). Se por algum motivo ainda for null
+  // no envio, captura na hora.
+  const atribuicaoRef = useRef<Atribuicao | null>(null);
+  // Dispara lead_form_start uma vez só, na primeira interação de verdade.
+  const iniciouRef = useRef(false);
+
+  useEffect(() => {
+    atribuicaoRef.current = capturarAtribuicao();
+  }, []);
+
+  function aoFocarFormulario() {
+    if (iniciouRef.current) return;
+    iniciouRef.current = true;
+    track({ nome: "lead_form_start" });
+  }
 
   function atualizar<C extends keyof Lead>(campo: C, valor: Lead[C]) {
     setCampos((atual) => ({ ...atual, [campo]: valor }));
@@ -56,6 +74,8 @@ export function LeadForm() {
     setErros(novosErros);
 
     if (Object.keys(novosErros).length > 0) {
+      // Só os NOMES dos campos com erro — nunca o que foi digitado.
+      track({ nome: "lead_form_error", campos: Object.keys(novosErros) });
       document.getElementById(Object.keys(novosErros)[0])?.focus();
       return;
     }
@@ -68,7 +88,12 @@ export function LeadForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: AbortSignal.timeout(15000),
-        body: JSON.stringify({ ...campos, empresa: honeypot, idempotencyKey }),
+        body: JSON.stringify({
+          ...campos,
+          empresa: honeypot,
+          idempotencyKey,
+          atribuicao: atribuicaoRef.current ?? capturarAtribuicao(),
+        }),
       });
 
       if (resposta.status === 422) {
@@ -77,6 +102,7 @@ export function LeadForm() {
         // digitado.
         const { erros: errosServidor } = await resposta.json();
         setErros(errosServidor ?? {});
+        track({ nome: "lead_form_error", campos: Object.keys(errosServidor ?? {}) });
         setEnviando(false);
         return;
       }
@@ -101,6 +127,15 @@ export function LeadForm() {
 
       const dados = await resposta.json().catch(() => null);
       if (!dados?.ok) throw new Error("Resposta inesperada do servidor.");
+
+      // O evento de conversão sai AQUI, não num useEffect que observa
+      // `enviado` — efeito re-executa em remount/StrictMode, chamada direta
+      // não. E só com recibo: o servidor devolve `recibo` apenas depois de
+      // confirmar a gravação (o descarte do honeypot responde ok SEM recibo,
+      // então um robô nunca vira conversão). HTTP 200 sozinho não basta.
+      if (dados.recibo === idempotencyKey) {
+        track({ nome: "generate_lead", recibo: dados.recibo });
+      }
 
       setEnviado(true);
     } catch {
@@ -164,6 +199,7 @@ export function LeadForm() {
               {linkWhatsappComercial && (
                 <a
                   href={linkWhatsappComercial}
+                  data-whatsapp="sucesso"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-5 inline-block text-sm font-semibold text-dourado underline underline-offset-4"
@@ -175,6 +211,7 @@ export function LeadForm() {
           ) : (
             <form
               onSubmit={handleSubmit}
+              onFocus={aoFocarFormulario}
               noValidate
               className="flex flex-col gap-5 rounded-2xl border border-onyx-line bg-onyx-raised p-6 sm:p-8"
             >
@@ -399,6 +436,7 @@ export function LeadForm() {
                   {linkWhatsappComercial && (
                     <a
                       href={linkWhatsappComercial}
+                      data-whatsapp="falha"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-2 inline-block font-semibold text-dourado underline underline-offset-4"

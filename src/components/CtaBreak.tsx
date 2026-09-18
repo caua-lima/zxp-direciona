@@ -17,6 +17,7 @@ export function CtaBreak() {
             </div>
             <a
               href="#formulario"
+              data-cta="meio"
               className="shrink-0 rounded-xl bg-dourado px-7 py-3.5 text-base font-bold text-onyx transition hover:brightness-110"
             >
               Quero conversar

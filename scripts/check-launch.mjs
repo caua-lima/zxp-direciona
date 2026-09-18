@@ -8,10 +8,17 @@
  * Três categorias, como a auditoria pediu — não são a mesma coisa:
  *   BLOQUEIO   — o cadastro ou a página não funciona direito assim.
  *   AVISO      — funciona, mas devia ser resolvido antes de tráfego pago.
- *   VERIFICAR  — este script não consegue confirmar sozinho (ex: "o domínio
- *                realmente resolve?", "testou um lead de verdade?").
+ *   VERIFICAR  — este script não consegue confirmar sozinho (ex: "a
+ *                conversão está validada na conta de anúncios?").
  *
- * Uso: npm run check:launch
+ * Uso:
+ *   npm run check:launch          (offline: só lê arquivos e .env.local)
+ *   npm run check:launch:online   (também consulta o banco e o site publicado)
+ *
+ * O modo --online faz requisição de rede DE VERDADE (Supabase e a URL
+ * pública) e por isso transforma em resultado automático o que no modo
+ * offline vira "verificação manual": banco pausado, migração faltando,
+ * domínio fora do ar. Nunca imprime chave, URL do banco ou qualquer segredo.
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -22,6 +29,8 @@ const raiz = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 // import() dinâmico exige URL file:// de verdade no Windows — um caminho
 // cru tipo "C:\..." não é aceito.
 const importar = (relativo) => import(pathToFileURL(path.join(raiz, relativo)));
+
+const online = process.argv.includes("--online");
 
 // ── Carrega .env.local manualmente (sem dependência nova) ─────────────────
 const envLocal = path.join(raiz, ".env.local");
@@ -35,22 +44,21 @@ if (existsSync(envLocal)) {
 const bloqueios = [];
 const avisos = [];
 const verificar = [];
+const confirmados = [];
 
-function bloqueio(msg) {
-  bloqueios.push(msg);
-}
-function aviso(msg) {
-  avisos.push(msg);
-}
-function precisaVerificar(msg) {
-  verificar.push(msg);
-}
+const bloqueio = (msg) => bloqueios.push(msg);
+const aviso = (msg) => avisos.push(msg);
+const precisaVerificar = (msg) => verificar.push(msg);
+const confirmado = (msg) => confirmados.push(msg);
 
 // ── Config de negócio (importa os .ts direto — Node 24 faz type-stripping
 // nativo, sem precisar buildar nada) ───────────────────────────────────────
 const { mentor, mentorPreenchido } = await importar("src/config/mentor.ts");
 const { site, contatoComercial, dadosPrivacidade } =
   await importar("src/config/site.ts");
+const { diagnosticoTracking, trackingAtivo } = await importar(
+  "src/config/tracking.ts",
+);
 
 // ── Mentor / autoridade ─────────────────────────────────────────────────
 if (!mentorPreenchido) {
@@ -86,12 +94,16 @@ if (dominiosDeExemplo.some((d) => site.urlPublica.includes(d))) {
     `urlPublica ainda é o domínio padrão da Vercel (${site.urlPublica}) — funciona, mas considere registrar um domínio próprio antes de anunciar.`,
   );
 }
-precisaVerificar(
-  `Confirme que ${site.urlPublica} resolve e serve a página (curl/navegador) — este script não faz requisição de rede.`,
-);
+if (!online) {
+  precisaVerificar(
+    `Confirme que ${site.urlPublica} resolve e serve a página (ou rode com --online).`,
+  );
+}
 
 // ── Privacidade ──────────────────────────────────────────────────────────
-if (!dadosPrivacidade.controlador || !dadosPrivacidade.canalContato) {
+const privacidadeIncompleta =
+  !dadosPrivacidade.controlador || !dadosPrivacidade.canalContato;
+if (privacidadeIncompleta) {
   aviso(
     "Dados de privacidade incompletos (src/config/site.ts: controlador/" +
       "canalContato) — a página de privacidade ainda não existe no site; " +
@@ -104,9 +116,9 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   bloqueio(
     "SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY ausentes — /api/leads responde 503 pra todo mundo, nenhum cadastro é salvo.",
   );
-} else {
+} else if (!online) {
   precisaVerificar(
-    "Supabase configurado — confirme que o projeto está ATIVO (não pausado) e que as migrações em supabase/migrations/ foram todas aplicadas (npm run check:launch não consulta o banco).",
+    "Supabase configurado — confirme que o projeto está ATIVO (não pausado) e que TODAS as migrações em supabase/migrations/ foram aplicadas (ou rode o modo online, que confere isso).",
   );
 }
 
@@ -128,6 +140,94 @@ if (!process.env.RATE_LIMIT_PEPPER) {
   );
 }
 
+// ── Medição e anúncios (tudo opcional, desligado por padrão) ─────────────
+for (const problema of diagnosticoTracking.problemas) aviso(problema);
+
+if (diagnosticoTracking.conflitoGtmComDiretos) {
+  aviso(
+    "NEXT_PUBLIC_GTM_ID e IDs diretos (GA4/Meta) estão todos definidos — o GTM vira o único dono das tags e os IDs diretos são IGNORADOS de propósito, pra não contar cada evento em dobro. Remova os diretos se for isso mesmo que você quer.",
+  );
+}
+
+if (!trackingAtivo) {
+  aviso(
+    "Nenhuma medição configurada (NEXT_PUBLIC_GA4_MEASUREMENT_ID / NEXT_PUBLIC_META_PIXEL_ID / NEXT_PUBLIC_GTM_ID). O site funciona, mas você não vai conseguir otimizar campanha por cadastro. A origem (utm_*) continua sendo gravada em cada lead.",
+  );
+} else {
+  if (privacidadeIncompleta) {
+    bloqueio(
+      "Medição ligada, mas os dados de privacidade estão incompletos (src/config/site.ts). Coletar dado de visitante (adolescentes inclusive) sem dizer quem é o responsável nem como exercer direitos não é algo pra publicar.",
+    );
+  }
+  precisaVerificar(
+    "Medição configurada NO CÓDIGO não é o mesmo que evento validado NA CONTA, nem que conversão usada NA CAMPANHA. Valide generate_lead no GA4 (Admin > DebugView) e/ou no Meta (Gerenciador de Eventos > Testar eventos); depois escolha UMA conversão primária de cadastro no Google Ads (importada do GA4, não as duas). Este script não acessa suas contas.",
+  );
+  precisaVerificar(
+    "NEXT_PUBLIC_* é embutido no build: confirme que os mesmos IDs estão em Vercel > Environment Variables e que houve um novo deploy depois de defini-los.",
+  );
+}
+
+// ── Online (só com --online) ─────────────────────────────────────────────
+// Colunas que o código grava. Se o banco não tem alguma, o cadastro falha
+// com 502 — foi exatamente o que aconteceu antes de a migração 0003 rodar.
+const COLUNAS_LEADS = [
+  "id", "nome", "whatsapp", "email", "idade", "peso", "contexto",
+  "consentimento_em", "confirmacao_responsavel", "status", "observacoes",
+  "idempotency_key", "utm_source", "utm_medium", "utm_campaign",
+  "utm_content", "utm_term", "referrer_host",
+];
+
+async function verificarOnline() {
+  const url = process.env.SUPABASE_URL;
+  const chave = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (url && chave) {
+    const cabecalhos = { apikey: chave, Authorization: `Bearer ${chave}` };
+    try {
+      // limit=0: só valida que a tabela e TODAS as colunas existem, sem ler dado.
+      const leads = await fetch(
+        `${url}/rest/v1/leads?select=${COLUNAS_LEADS.join(",")}&limit=0`,
+        { headers: cabecalhos, signal: AbortSignal.timeout(10000) },
+      );
+      if (leads.ok) {
+        confirmado("Supabase ativo; tabela leads tem todas as colunas que o código grava.");
+      } else {
+        const corpo = await leads.json().catch(() => ({}));
+        bloqueio(
+          `Banco responde, mas a tabela leads não bate com o código (HTTP ${leads.status}: ${String(corpo.message ?? "sem detalhe").slice(0, 140)}). Rode as migrações de supabase/migrations/ em ordem.`,
+        );
+      }
+
+      const limite = await fetch(`${url}/rest/v1/rate_limit_hits?select=bucket&limit=0`, {
+        headers: cabecalhos,
+        signal: AbortSignal.timeout(10000),
+      });
+      if (limite.ok) confirmado("Tabela rate_limit_hits existe.");
+      else
+        aviso(
+          "Tabela rate_limit_hits ausente — o rate limit falha aberto (não bloqueia ninguém). Rode a migração 0002.",
+        );
+    } catch (erro) {
+      bloqueio(
+        `Não consegui falar com o Supabase (${erro.cause?.code ?? erro.name}). Projeto pausado, deletado ou URL errada? Confira no dashboard.`,
+      );
+    }
+  }
+
+  try {
+    const resposta = await fetch(site.urlPublica, {
+      signal: AbortSignal.timeout(10000),
+      redirect: "follow",
+    });
+    if (resposta.ok) confirmado(`${site.urlPublica} respondeu HTTP ${resposta.status}.`);
+    else bloqueio(`${site.urlPublica} respondeu HTTP ${resposta.status}.`);
+  } catch (erro) {
+    bloqueio(`${site.urlPublica} não respondeu (${erro.cause?.code ?? erro.name}).`);
+  }
+}
+
+if (online) await verificarOnline();
+
 // ── Relatório ────────────────────────────────────────────────────────────
 function secao(titulo, itens, vazio) {
   console.log(`\n${titulo} (${itens.length})`);
@@ -139,9 +239,10 @@ function secao(titulo, itens, vazio) {
 }
 
 console.log("═".repeat(70));
-console.log("Verificação de lançamento — ZXP Direciona");
+console.log(`Verificação de lançamento — ZXP Direciona${online ? "  [online]" : ""}`);
 console.log("═".repeat(70));
 
+if (online) secao("🟢 CONFIRMADO agora, por requisição real", confirmados, "Nada confirmado.");
 secao("🔴 BLOQUEIA tráfego", bloqueios, "Nenhum. 🎉");
 secao("🟡 AVISO — resolva antes de anunciar", avisos, "Nenhum.");
 secao("🔵 VERIFICAÇÃO MANUAL — este script não consegue confirmar", verificar, "—");

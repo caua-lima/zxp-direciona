@@ -8,6 +8,11 @@ import {
 } from "@/lib/lead";
 import { supabaseFetch, supabaseConfigurado } from "@/lib/supabase";
 import { verificarLimite, ipDaRequisicao } from "@/lib/rateLimit";
+import {
+  sanitizarAtribuicao,
+  atribuicaoParaColunas,
+  type Atribuicao,
+} from "@/lib/atribuicao";
 
 /**
  * Recebe o cadastro da LP: valida, grava no Supabase (de forma idempotente)
@@ -103,6 +108,9 @@ export async function POST(request: Request) {
   }
 
   const lead = normalizarLead(body);
+  // O cliente manda a origem da campanha, mas o servidor não confia nela:
+  // allowlist de chaves, tamanho limitado, sem query string inteira.
+  const atribuicao = sanitizarAtribuicao(corpo.atribuicao);
   const erros = validarLead(lead);
 
   if (Object.keys(erros).length > 0) {
@@ -148,6 +156,7 @@ export async function POST(request: Request) {
         consentimento_em: new Date().toISOString(),
         confirmacao_responsavel: lead.confirmacaoResponsavel,
         idempotency_key: idempotencyKey,
+        ...atribuicaoParaColunas(atribuicao),
       }),
     });
 
@@ -190,7 +199,7 @@ export async function POST(request: Request) {
   // primeira vez, e reenviar aqui duplicaria e-mail num simples retry.
   if (!jaExistia) {
     after(() =>
-      notificar(lead).catch((erro) =>
+      notificar(lead, atribuicao).catch((erro) =>
         console.error(
           `[leads] Lead ${leadId ?? "?"} salvo, mas o aviso falhou:`,
           erro instanceof Error ? erro.message : erro,
@@ -199,10 +208,19 @@ export async function POST(request: Request) {
     );
   }
 
-  return Response.json({ ok: true });
+  // O recibo só existe neste caminho — gravação nova OU chave que já estava
+  // gravada (retry depois de resposta perdida). O descarte do honeypot acima
+  // responde ok SEM recibo, e é isso que impede um robô de virar conversão
+  // no tracking do cliente. É a própria chave de idempotência devolvida:
+  // opaca, sem dado pessoal, e estável entre retries — então o evento de
+  // conversão tem sempre o mesmo id, não importa quantas vezes a resposta
+  // chegue.
+  return Response.json(
+    idempotencyKey ? { ok: true, recibo: idempotencyKey } : { ok: true },
+  );
 }
 
-async function notificar(lead: Lead) {
+async function notificar(lead: Lead, atribuicao: Atribuicao) {
   if (!RESEND_API_KEY || !LEAD_NOTIFY_TO || !LEAD_NOTIFY_FROM) {
     console.warn("[leads] Notificação por e-mail não configurada — pulando.");
     return;
@@ -234,6 +252,7 @@ async function notificar(lead: Lead) {
           <p style="margin:0 0 4px"><strong>WhatsApp:</strong> ${escapar(mascaraWhatsapp(lead.whatsapp))}</p>
           <p style="margin:0 0 4px"><strong>E-mail:</strong> ${escapar(lead.email)}</p>
           <p style="margin:0 0 4px"><strong>O que mais pesa:</strong> ${escapar(lead.peso)}</p>
+          ${origemEmTexto(atribuicao)}
           ${
             lead.contexto
               ? `<p style="margin:16px 0 4px"><strong>Contexto:</strong><br>${escapar(lead.contexto)}</p>`
@@ -256,6 +275,16 @@ async function notificar(lead: Lead) {
     const detalhe = await resposta.text().catch(() => "");
     throw new Error(`Resend ${resposta.status}: ${detalhe.slice(0, 200)}`);
   }
+}
+
+/** Uma linha só com de onde o lead veio, ou vazio se veio direto. Passa por
+ * escapar(): utm_* vem da URL, ou seja, de quem quiser montar um link. */
+function origemEmTexto(a: Atribuicao): string {
+  const partes = [a.utm_source, a.utm_medium, a.utm_campaign, a.referrer_host].filter(
+    (p): p is string => Boolean(p),
+  );
+  if (partes.length === 0) return "";
+  return `<p style="margin:0 0 4px"><strong>Origem:</strong> ${escapar(partes.join(" / "))}</p>`;
 }
 
 /** Evita que um lead com "<" no texto quebre (ou injete) o HTML do e-mail. */

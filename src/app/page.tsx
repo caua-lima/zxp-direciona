@@ -10,6 +10,7 @@ import { Faq } from "@/components/Faq";
 import { LeadForm } from "@/components/LeadForm";
 import { Footer } from "@/components/Footer";
 import { StickyMobileCta } from "@/components/StickyMobileCta";
+import { TrackingProvider } from "@/components/TrackingProvider";
 
 export default function Home() {
   return (
@@ -37,6 +38,7 @@ export default function Home() {
 
       <Footer />
       <StickyMobileCta />
+      <TrackingProvider />
     </div>
   );
 }

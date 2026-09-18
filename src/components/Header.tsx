@@ -33,6 +33,7 @@ export function Header() {
 
         <a
           href="#formulario"
+          data-cta="header"
           className="flex min-h-11 items-center rounded-lg border border-dourado/40 px-4 text-sm font-semibold text-dourado transition hover:bg-dourado hover:text-onyx"
         >
           Quero minha call

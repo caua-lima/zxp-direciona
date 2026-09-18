@@ -57,6 +57,7 @@ export function StickyMobileCta() {
     >
       <a
         href="#formulario"
+        data-cta="mobile_fixo"
         tabIndex={visivel ? undefined : -1}
         className="block rounded-xl bg-dourado px-6 py-3.5 text-center text-base font-bold text-onyx"
       >

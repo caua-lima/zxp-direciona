@@ -41,7 +41,8 @@ Abre em http://localhost:3000.
 > ⚠️ `src/config/mentor.ts` e partes de `src/config/site.ts` ainda estão com
 > **placeholders**. Nenhum número, resultado ou depoimento foi inventado —
 > preencha com os dados reais antes de divulgar a página. Rode
-> `npm run check:launch` pra ver exatamente o que falta (ver
+> `npm run check:launch` (ou `check:launch:online`, que também consulta o banco e o
+> site publicado) pra ver exatamente o que falta (ver
 > [`docs/CONFIGURACAO-E-LANCAMENTO.md`](docs/CONFIGURACAO-E-LANCAMENTO.md)).
 
 ---
@@ -77,9 +78,12 @@ A rota fica em `src/app/api/leads/route.ts` e faz, nesta ordem:
 Copie `.env.example` para `.env.local` e preencha. Em produção, cadastre as
 mesmas em **Vercel → Settings → Environment Variables**.
 
-> Nenhuma variável tem `NEXT_PUBLIC_` no nome, e isso é proposital: qualquer
-> coisa com esse prefixo vai embutida no JavaScript que o visitante baixa. A
-> chave `service_role` dá acesso total ao banco e só pode existir no servidor.
+> Variáveis **secretas** (Supabase, Resend) nunca levam `NEXT_PUBLIC_` no nome:
+> qualquer coisa com esse prefixo vai embutida no JavaScript que o visitante
+> baixa, e a `service_role` dá acesso total ao banco. Já os IDs **públicos** de
+> medição (GA4, Meta, GTM — opcionais, desligados por padrão) usam
+> `NEXT_PUBLIC_` e exigem novo build ao mudar. Ver
+> [`docs/CONFIGURACAO-E-LANCAMENTO.md`](docs/CONFIGURACAO-E-LANCAMENTO.md).
 
 ### Testando a rota sem preencher o formulário
 
@@ -102,7 +106,13 @@ trata isso assim:
   `consentimento_em` (LGPD).
 - **RLS ligado sem nenhuma policy** na tabela: as chaves públicas do Supabase
   não leem nada. Só o servidor, com a `service_role`, acessa.
-- **Coleta mínima**: sem IP, sem user-agent, sem rastreamento de terceiros.
+- **Coleta mínima**: o cadastro não grava IP nem user-agent. O rate limit usa um
+  hash do IP (com a data), nunca o IP em texto puro. Da origem da campanha
+  guarda só `utm_*` e o host do referrer — nunca a query inteira nem a URL de
+  origem.
+- **Medição de terceiros é opt-in e desligada por padrão**: só existe se você
+  configurar um ID, e mesmo assim nada carrega antes de o visitante aceitar no
+  banner. Recusar não afeta o cadastro.
 
 Se um dia expor um painel de leads, ele precisa de autenticação de verdade —
 não basta uma URL difícil de adivinhar.

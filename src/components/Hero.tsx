@@ -36,6 +36,7 @@ export function Hero() {
         <div className="mt-9 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
           <a
             href="#formulario"
+            data-cta="hero"
             className="rounded-xl bg-dourado px-8 py-4 text-center text-base font-bold text-onyx shadow-lg shadow-dourado/15 transition hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0"
           >
             Quero minha call de diagnóstico

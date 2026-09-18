@@ -37,7 +37,17 @@ create table if not exists public.leads (
   -- com segurança depois de uma falha, sem duplicar o lead. NULL é normal
   -- (cliente sem a chave, ou lead antigo); Postgres não considera NULL
   -- igual a NULL, então isso nunca cria falso conflito entre leads sem chave.
-  idempotency_key text
+  idempotency_key text,
+
+  -- Origem da campanha (ver src/lib/atribuicao.ts). NULL = veio direto ou é
+  -- lead antigo. Só o host do referrer, nunca a URL; só utm_*, nunca a query
+  -- inteira.
+  utm_source text,
+  utm_medium text,
+  utm_campaign text,
+  utm_content text,
+  utm_term text,
+  referrer_host text
 );
 
 create index if not exists leads_criado_em_idx on public.leads (criado_em desc);
