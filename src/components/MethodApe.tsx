@@ -1,24 +1,30 @@
 import { Section } from "./Section";
 import { Reveal } from "./Reveal";
 
-const passos = [
+/**
+ * O método é seu (Analisar, Pensar, Executar) e o nome fica. O que é meu, e
+ * você deve conferir, é o texto de "atividade" e "você sai com": o único
+ * resultado que veio de você é o plano de ação (está na lista de entregas);
+ * os outros dois são a leitura mais direta do que cada etapa significa.
+ */
+const etapas = [
   {
-    numero: "01",
     letra: "A",
     titulo: "Analisar",
-    texto: "Mapeamos onde você está, o que pesa e o que já tentou.",
+    atividade: "Entendemos onde você está, o que pesa e o que você já tentou.",
+    saida: "Uma visão clara do seu momento.",
   },
   {
-    numero: "02",
     letra: "P",
     titulo: "Pensar",
-    texto: "Organizamos as opções reais e o raciocínio por trás de cada uma.",
+    atividade: "Organizamos as opções reais e o raciocínio por trás de cada uma.",
+    saida: "Opções comparadas, com critério.",
   },
   {
-    numero: "03",
     letra: "E",
     titulo: "Executar",
-    texto: "Transformamos direção em plano de ação e acompanhamento.",
+    atividade: "Transformamos a direção em passos e acompanhamos a execução.",
+    saida: "Um plano de ação personalizado.",
   },
 ];
 
@@ -26,43 +32,43 @@ export function MethodApe() {
   return (
     <Section
       id="metodo"
-      eyebrow="Como funciona"
+      eyebrow="Como o acompanhamento funciona"
       title="Método APE"
-      subtitle="Três etapas que se repetem ao longo do acompanhamento — não é um passo único, é um ciclo."
+      subtitle="Três etapas que se repetem ao longo da mentoria — é um ciclo, não um passo único."
+      largura="ampla"
     >
-      <div className="relative">
-        {/* Linha que conecta as três etapas no desktop */}
+      <ol className="relative grid gap-10 md:grid-cols-3 md:gap-8">
+        {/* Linha que atravessa as três letras no desktop */}
         <div
           aria-hidden="true"
-          className="absolute top-14 right-[16%] left-[16%] hidden h-px bg-gradient-to-r from-dourado/10 via-dourado/40 to-dourado/10 sm:block"
+          className="absolute top-8 right-[16%] left-[16%] hidden h-px bg-gradient-to-r from-dourado/10 via-dourado/40 to-dourado/10 md:block"
         />
 
-        <ol className="relative grid gap-5 sm:grid-cols-3">
-          {passos.map((passo, i) => (
-            <li key={passo.letra}>
-              <Reveal delay={i * 110}>
-                <div className="group h-full rounded-2xl border border-onyx-line bg-onyx-raised p-6 text-center transition hover:border-dourado/30 sm:pt-8">
-                  <span
-                    aria-hidden="true"
-                    className="font-display mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-dourado/25 bg-onyx text-2xl font-bold text-dourado transition group-hover:border-dourado/60"
-                  >
-                    {passo.letra}
-                  </span>
-                  <p className="mt-5 text-[11px] font-semibold tracking-[0.16em] text-marfim/35">
-                    {passo.numero}
-                  </p>
-                  <h3 className="font-display mt-1.5 text-xl font-bold">
-                    {passo.titulo}
-                  </h3>
-                  <p className="mt-2.5 text-sm leading-relaxed text-marfim/60">
-                    {passo.texto}
+        {etapas.map((etapa, i) => (
+          <li key={etapa.letra} className="relative">
+            <Reveal delay={i * 110}>
+              <div className="flex gap-5 md:flex-col md:gap-0">
+                <span
+                  aria-hidden="true"
+                  className="font-display relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-dourado/30 bg-onyx text-2xl font-bold text-dourado"
+                >
+                  {etapa.letra}
+                </span>
+                <div className="md:mt-6">
+                  <h3 className="font-display text-xl font-bold">{etapa.titulo}</h3>
+                  <p className="mt-2 leading-relaxed text-marfim/70">{etapa.atividade}</p>
+                  <p className="mt-4 border-l-2 border-dourado/40 pl-4 text-sm text-marfim/80">
+                    <span className="block text-xs font-semibold tracking-[0.12em] text-dourado uppercase">
+                      Você sai com
+                    </span>
+                    {etapa.saida}
                   </p>
                 </div>
-              </Reveal>
-            </li>
-          ))}
-        </ol>
-      </div>
+              </div>
+            </Reveal>
+          </li>
+        ))}
+      </ol>
     </Section>
   );
 }

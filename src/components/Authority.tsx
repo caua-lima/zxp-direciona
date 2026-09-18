@@ -24,7 +24,7 @@ export function Authority() {
             ) : (
               /* Placeholder — some sozinho quando `photoUrl` for preenchido
                  em src/config/mentor.ts */
-              <span className="flex h-full w-full items-center justify-center text-center text-[10px] leading-tight tracking-wide text-marfim/55 uppercase">
+              <span className="flex h-full w-full items-center justify-center text-center text-xs leading-tight tracking-wide text-marfim/55 uppercase">
                 Foto
                 <br />
                 aqui

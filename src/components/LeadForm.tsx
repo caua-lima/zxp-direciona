@@ -174,15 +174,15 @@ export function LeadForm() {
       <div className="mx-auto max-w-xl">
         <Reveal>
           <div className="mb-8 text-center">
-            <p className="mb-3 text-[11px] font-semibold tracking-[0.16em] text-dourado uppercase">
+            <p className="mb-3 text-xs font-semibold tracking-[0.14em] text-dourado uppercase">
               Próximo passo
             </p>
             <h2 className="font-display text-3xl leading-tight font-bold tracking-tight sm:text-4xl">
               Vamos conversar sobre o seu caso
             </h2>
             <p className="mt-4 text-marfim/60">
-              Preencha os campos abaixo e eu chamo você no WhatsApp pra marcar a
-              call de diagnóstico. Leva menos de um minuto.
+              Preencha os campos abaixo e a gente chama você no WhatsApp pra combinar
+              a conversa inicial, gratuita e sem compromisso.
             </p>
           </div>
         </Reveal>
@@ -203,9 +203,9 @@ export function LeadForm() {
                 Recebido, {campos.nome.trim().split(" ")[0]}.
               </p>
               <p className="mt-3 leading-relaxed text-marfim/70">
-                Vou te chamar no WhatsApp{" "}
+                Vamos te chamar no WhatsApp{" "}
                 <strong className="text-marfim">{campos.whatsapp}</strong> pra
-                combinar o horário da sua call de diagnóstico.
+                combinar o horário da sua conversa.
               </p>
               <p className="mt-4 text-sm text-marfim/55">
                 Se preferir, deixe o número salvo — a conversa começa por lá.
@@ -389,7 +389,7 @@ export function LeadForm() {
                   />
                   <span>
                     Autorizo o contato da ZXP Direciona por WhatsApp e e-mail
-                    sobre a call de diagnóstico.
+                    sobre a conversa inicial.
                   </span>
                 </label>
                 {erros.consentimento && (
@@ -466,12 +466,13 @@ export function LeadForm() {
                 disabled={enviando}
                 className="mt-1 rounded-xl bg-dourado px-8 py-4 text-base font-bold text-onyx shadow-lg shadow-dourado/15 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {enviando ? "Enviando…" : "Quero conversar"}
+                {enviando ? "Enviando…" : "Quero minha conversa gratuita"}
               </button>
 
               <p className="text-center text-xs leading-relaxed text-marfim/55">
-                Seus dados são usados só pra entrar em contato sobre a call.
-                Nada de spam, nada compartilhado com terceiros.
+                Usamos seus dados pra entrar em contato sobre a conversa. Eles
+                ficam guardados nos serviços que a ZXP Direciona usa pra operar
+                o site (banco de dados e e-mail).
               </p>
             </form>
           )}

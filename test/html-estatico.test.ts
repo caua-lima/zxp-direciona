@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { site } from "@/config/site";
+import { gruposEntregaveis } from "@/config/oferta";
 
 /**
  * Testa o HTML que o Next de fato gerou (`next build`) — não o JSX. É o que o
@@ -39,6 +40,28 @@ describe("HTML gerado pelo build", opcoes, () => {
     for (const proibido of ["[Nome do mentor]", "[Cargo", "[Bio curta", "[Credencial", "Foto aqui", "aqui]"]) {
       assert.ok(!html.includes(proibido), `placeholder publicado: ${proibido}`);
     }
+  });
+
+  test("entregável só aparece na página se estiver publicado em oferta.ts", () => {
+    // O HTML escapa apóstrofos etc.; os títulos atuais só têm acentos, que passam.
+    for (const item of gruposEntregaveis.flatMap((g) => g.itens)) {
+      assert.equal(
+        html.includes(item.titulo),
+        item.publicado,
+        `"${item.titulo}" ${item.publicado ? "deveria estar" : "não deveria estar"} no HTML`,
+      );
+    }
+  });
+
+  test("a página não afirma preço, duração nem prazo que ninguém confirmou", () => {
+    assert.ok(!/R\$\s?\d/.test(html), "preço no HTML");
+    assert.ok(!/\d+\s*(meses|mês)/i.test(html), "duração afirmada no HTML");
+    assert.ok(!/em até \d+|responderemos em/i.test(html), "prazo de retorno afirmado no HTML");
+  });
+
+  test("a seção 'Como funciona' existe uma vez e o hero aponta pra ela", () => {
+    assert.equal((html.match(/\sid="como-funciona"/g) ?? []).length, 1);
+    assert.match(html, /href="#como-funciona"/);
   });
 
   test("idioma, título, canonical e descrição corretos", () => {

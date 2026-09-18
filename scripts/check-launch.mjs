@@ -59,6 +59,7 @@ const { site, contatoComercial, dadosPrivacidade } =
 const { diagnosticoTracking, trackingAtivo } = await importar(
   "src/config/tracking.ts",
 );
+const { entregaveisPendentes, termos } = await importar("src/config/oferta.ts");
 
 // ── Mentor / autoridade ─────────────────────────────────────────────────
 if (!mentorPreenchido) {
@@ -71,6 +72,23 @@ if (!mentorPreenchido) {
   aviso(
     "Mentor preenchido, mas sem foto (photoUrl em src/config/mentor.ts) — " +
       "a seção aparece com um placeholder de foto vazio.",
+  );
+}
+
+// ── Oferta (o que a página afirma sobre o serviço) ──────────────────────
+for (const item of entregaveisPendentes()) {
+  aviso(
+    `Entregável fora da página: "${item.titulo}" — ${item.pendencia} (src/config/oferta.ts)`,
+  );
+}
+if (!termos.duracaoDaMentoria) {
+  precisaVerificar(
+    "Duração da mentoria não informada (termos.duracaoDaMentoria em src/config/oferta.ts) — a página diz que isso é combinado na conversa inicial.",
+  );
+}
+if (!termos.prazoDeRetorno) {
+  precisaVerificar(
+    "Prazo de retorno não informado (termos.prazoDeRetorno em src/config/oferta.ts) — a página não promete prazo nenhum. Se o time não responde rápido, deixe assim.",
   );
 }
 

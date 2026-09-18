@@ -1,11 +1,12 @@
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
+import { ProcessoContato } from "@/components/ProcessoContato";
+import { Authority } from "@/components/Authority";
 import { ProblemIdentification } from "@/components/ProblemIdentification";
 import { WhatItIs } from "@/components/WhatItIs";
 import { MethodApe } from "@/components/MethodApe";
-import { CtaBreak } from "@/components/CtaBreak";
 import { Included } from "@/components/Included";
-import { Authority } from "@/components/Authority";
+import { CtaBreak } from "@/components/CtaBreak";
 import { Faq } from "@/components/Faq";
 import { LeadForm } from "@/components/LeadForm";
 import { Footer } from "@/components/Footer";
@@ -24,14 +25,19 @@ export default function Home() {
 
       <Header />
 
+      {/* Ordem pensada pra tráfego frio: o que é e o que acontece ao clicar,
+          quem conduz (a oferta depende de confiança pessoal — Authority só
+          aparece quando o mentor está preenchido), o problema, o escopo, o
+          método, o que inclui, e só então o formulário. */}
       <main className="flex flex-1 flex-col">
         <Hero />
+        <ProcessoContato />
+        <Authority />
         <ProblemIdentification />
         <WhatItIs />
         <MethodApe />
-        <CtaBreak />
         <Included />
-        <Authority />
+        <CtaBreak />
         <Faq />
         <LeadForm />
       </main>

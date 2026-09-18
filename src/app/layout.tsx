@@ -20,7 +20,7 @@ const inter = Inter({
 const siteUrl = site.urlPublica;
 
 const descricao =
-  "ZXP Direciona é a mentoria de direção profissional da ZXP Solutions, para jovens de 16 a 25 anos travados entre faculdade, carreira e futuro. Agende sua call de diagnóstico gratuita.";
+  "ZXP Direciona é a mentoria de direção profissional da ZXP Solutions, para jovens de 16 a 25 anos travados entre faculdade, carreira e futuro. A conversa inicial é gratuita e sem compromisso.";
 
 // A Vercel injeta VERCEL_ENV automaticamente ("production" | "preview" |
 // "development"). Só a produção de verdade é indexável — uma preview de PR

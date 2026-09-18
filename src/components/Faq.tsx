@@ -3,6 +3,13 @@
 import { useState } from "react";
 import { Section } from "./Section";
 import { Reveal } from "./Reveal";
+import { termos } from "@/config/oferta";
+
+// Duração e prazo só são afirmados se existirem em src/config/oferta.ts —
+// ninguém confirmou nenhum dos dois, então por padrão a resposta manda pra
+// conversa inicial em vez de inventar um número.
+const acompanhamento =
+  "O acompanhamento inclui duas conversas individuais por mês, com suporte por WhatsApp entre elas.";
 
 const perguntas = [
   {
@@ -11,29 +18,25 @@ const perguntas = [
       "Pra jovens de 16 a 25 anos que precisam de direção — na escolha da faculdade, numa virada de carreira ou na decisão do que fazer agora. Vale tanto pra quem não escolheu nada quanto pra quem escolheu e se arrependeu.",
   },
   {
-    pergunta: "Para quem não é?",
+    pergunta: "A conversa inicial tem algum custo?",
     resposta:
-      "Não é pra quem busca terapia ou acompanhamento clínico, nem pra quem quer receber uma resposta pronta sobre qual profissão seguir. A ZXP Direciona é método, acompanhamento e execução — a decisão continua sendo sua.",
+      "Não. A conversa inicial é gratuita e sem compromisso. A mentoria em si é um serviço pago, com investimento único apresentado nessa conversa, depois de entendermos o seu caso. Não trabalhamos com parcelamento em múltiplas vezes.",
   },
   {
-    pergunta: "Existe mais de um plano?",
+    pergunta: "O que acontece na conversa inicial?",
     resposta:
-      "Não. Existe um único plano, o ZXP Direciona, com tudo incluído. Nada de versão básica que entrega menos nem de versão premium pra empurrar depois: direção não funciona pela metade.",
-  },
-  {
-    pergunta: "Como funciona o pagamento?",
-    resposta:
-      "É um investimento único, apresentado na call de diagnóstico de acordo com o seu momento. Não trabalhamos com parcelamento em múltiplas vezes. Nada é cobrado pra participar da call.",
+      "É uma conversa individual pra entender o seu momento, apontar o que está travando e avaliar se a ZXP Direciona faz sentido pra você. Se não fizer, a gente diz isso na hora.",
   },
   {
     pergunta: "Quanto tempo dura a mentoria?",
-    resposta:
-      "O acompanhamento é contínuo, com duas calls por mês e suporte no intervalo. A duração é combinada com você na call de diagnóstico, a partir do que o seu caso exige.",
+    resposta: termos.duracaoDaMentoria
+      ? `A mentoria dura ${termos.duracaoDaMentoria}. ${acompanhamento}`
+      : `${acompanhamento} Os detalhes de duração e investimento você conhece na conversa inicial, antes de decidir qualquer coisa.`,
   },
   {
-    pergunta: "O que acontece na call de diagnóstico?",
+    pergunta: "Para quem não é?",
     resposta:
-      "É uma conversa individual pra entender seu momento, apontar o que está travando e avaliar se a ZXP Direciona faz sentido pra você. Se não fizer, eu falo isso na hora. Sem compromisso e sem custo.",
+      "Não é pra quem busca terapia ou acompanhamento clínico, nem pra quem quer receber uma resposta pronta sobre qual profissão seguir. A ZXP Direciona é método, acompanhamento e execução — a decisão continua sendo sua.",
   },
   {
     pergunta: "A ZXP Direciona garante emprego ou uma renda específica?",
