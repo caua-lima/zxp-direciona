@@ -48,17 +48,12 @@ export const gruposEntregaveis: GrupoEntregaveis[] = [
     titulo: "Sessão complementar",
     itens: [
       {
-        titulo: "Uma conversa com Terapeuta Sistêmica Quântica",
-        // ⚠️ PENDENTE — a página diz "não é terapia" e este item promete uma
-        // sessão com uma terapeuta: sem esclarecer, um contradiz o outro.
-        // Confirme: o serviço existe, quem presta, com qual formação, e o que
-        // exatamente é (uma sessão de outra disciplina, complementar, fora do
-        // escopo da mentoria?). Não renomeie como psicologia e não invente
-        // credencial. Para publicar: `publicado: true` e reescreva o "Não é
-        // terapia" em WhatItIs.tsx pra dizer o que a mentoria NÃO substitui.
-        publicado: false,
-        pendencia:
-          "Confirmar serviço, profissional, formação e escopo; reconciliar com o texto 'Não é terapia'.",
+        // Corrigido pelo dono: NÃO é terapeuta, é treinadora comportamental.
+        // Com isso não há mais contradição com o "Não é terapia" da página.
+        // Não escreva credencial, certificação ou método daqui sem o dono
+        // confirmar — a página só afirma o que ele disse.
+        titulo: "Uma conversa com treinadora comportamental",
+        publicado: true,
       },
     ],
   },
