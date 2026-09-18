@@ -13,6 +13,9 @@ export function Logo() {
         <span className="text-[10px] font-bold tracking-[0.24em] text-dourado">
           ZXP
         </span>
+        {/* O espaço não aparece (flex), mas faz o texto visível ser "ZXP DIRECIONA"
+            e não "ZXPDIRECIONA" — o nome acessível do link precisa contê-lo. */}
+        {" "}
         <span className="font-display mt-0.5 text-lg font-bold tracking-[0.1em] text-marfim">
           DIRECIONA
         </span>
