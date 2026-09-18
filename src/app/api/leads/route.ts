@@ -2,17 +2,14 @@ import { after } from "next/server";
 import {
   normalizarLead,
   validarLead,
-  whatsappInternacional,
-  mascaraWhatsapp,
+  cadastroIdentico,
   type Lead,
+  type LinhaLead,
 } from "@/lib/lead";
-import { supabaseFetch, supabaseConfigurado } from "@/lib/supabase";
+import { supabaseFetch, supabaseConfigurado, resumoDoErro } from "@/lib/supabase";
 import { verificarLimite, ipDaRequisicao } from "@/lib/rateLimit";
-import {
-  sanitizarAtribuicao,
-  atribuicaoParaColunas,
-  type Atribuicao,
-} from "@/lib/atribuicao";
+import { sanitizarAtribuicao, atribuicaoParaColunas } from "@/lib/atribuicao";
+import { notificarLead } from "@/lib/notificacao";
 
 /**
  * Recebe o cadastro da LP: valida, grava no Supabase (de forma idempotente)
@@ -27,16 +24,49 @@ export const runtime = "nodejs";
 // Nunca cachear: cada POST é único e precisa chegar no banco.
 export const dynamic = "force-dynamic";
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const LEAD_NOTIFY_TO = process.env.LEAD_NOTIFY_TO;
-const LEAD_NOTIFY_FROM = process.env.LEAD_NOTIFY_FROM;
-
 // Generoso pro maior payload plausível (nome+whatsapp+email+contexto de 400
 // chars + folga), mas fecha a porta pra alguém mandar um corpo de megabytes
 // só pra gastar CPU/memória da função.
 const TAMANHO_MAXIMO_BODY = 20_000; // bytes
 
+/** Nome do erro + código de rede, sem a mensagem (que pode citar dados). */
+function descreverErro(erro: unknown): string {
+  if (!(erro instanceof Error)) return "erro desconhecido";
+  const causa = (erro.cause as { code?: unknown } | undefined)?.code;
+  return typeof causa === "string" ? `${erro.name} ${causa}` : erro.name;
+}
+
+const SELECT_COMPARAVEL =
+  "nome,whatsapp,email,idade,peso,contexto,confirmacao_responsavel";
+
+/**
+ * A chave de idempotência já existe no banco. É um retry do mesmo cadastro?
+ * "indisponivel" = não deu pra conferir; nesse caso não se afirma sucesso.
+ */
+async function conferirCadastroExistente(
+  lead: Lead,
+  chave: string,
+): Promise<"identico" | "diferente" | "indisponivel"> {
+  try {
+    const resposta = await supabaseFetch(
+      `/rest/v1/leads?idempotency_key=eq.${encodeURIComponent(chave)}&select=${SELECT_COMPARAVEL}&limit=1`,
+      {},
+      5000,
+    );
+    if (!resposta.ok) return "indisponivel";
+    const linhas = (await resposta.json()) as LinhaLead[];
+    if (linhas.length === 0) return "indisponivel";
+    return cadastroIdentico(lead, linhas[0]) ? "identico" : "diferente";
+  } catch {
+    return "indisponivel";
+  }
+}
+
 export async function POST(request: Request) {
+  // Cabe no log e na resposta de erro: quem reportar um problema cita este
+  // código e dá pra achar a linha certa no log, sem nenhum dado pessoal.
+  const ref = crypto.randomUUID().slice(0, 8);
+
   // 1) Content-Type precisa ser JSON de verdade. Isso sozinho já barra o
   // vetor mais simples de POST cross-site: um <form> em outro site só
   // consegue mandar text/plain, x-www-form-urlencoded ou multipart sem
@@ -98,11 +128,13 @@ export async function POST(request: Request) {
     );
   }
 
+  // JSON.parse aceita `null`, número, array... — só objeto serve daqui pra frente.
+  const corpo = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
+
   // Armadilha anti-bot: campo invisível pra gente, irresistível pra robô.
   // Se veio preenchido, respondemos 200 pra não ensinar o bot a burlar,
   // mas não gravamos nada nem contamos como lead.
-  const corpo = body as Record<string, unknown>;
-  const honeypot = corpo?.empresa;
+  const honeypot = corpo.empresa;
   if (typeof honeypot === "string" && honeypot.length > 0) {
     return Response.json({ ok: true });
   }
@@ -122,14 +154,16 @@ export async function POST(request: Request) {
   // antigo (bundle em cache) que não manda nada continua funcionando, só
   // sem a proteção de duplicata.
   const idempotencyKey =
-    typeof corpo.idempotencyKey === "string" && corpo.idempotencyKey.length <= 100
+    typeof corpo.idempotencyKey === "string" &&
+    corpo.idempotencyKey.length > 0 &&
+    corpo.idempotencyKey.length <= 100
       ? corpo.idempotencyKey
       : null;
 
-  if (!supabaseConfigurado) {
-    console.error("[leads] Supabase não configurado.");
+  if (!supabaseConfigurado()) {
+    console.error(`[leads ${ref}] Supabase não configurado.`);
     return Response.json(
-      { erro: "Cadastro indisponível no momento." },
+      { erro: "Cadastro indisponível no momento.", ref },
       { status: 503 },
     );
   }
@@ -161,19 +195,19 @@ export async function POST(request: Request) {
     });
 
     if (!resposta.ok) {
-      const detalhe = await resposta.text();
-      console.error("[leads] Supabase recusou:", resposta.status, detalhe.slice(0, 300));
+      // Só status/código/mensagem do PostgREST — o corpo bruto pode trazer os
+      // valores da linha (ver resumoDoErro).
+      console.error(`[leads ${ref}] Supabase recusou: ${await resumoDoErro(resposta)}`);
       return Response.json(
-        { erro: "Não consegui salvar seu cadastro." },
+        { erro: "Não consegui salvar seu cadastro.", ref },
         { status: 502 },
       );
     }
 
     // `resolution=ignore-duplicates` faz o Postgres tratar um conflito de
     // idempotency_key como no-op em vez de erro — a resposta vem OK mas
-    // pode vir vazia (nada foi inserido de novo). É assim que distinguimos
-    // "gravei agora" de "essa chave já tinha sido gravada antes": corpo
-    // vazio = já existia, então não repetimos o e-mail.
+    // vazia (nada foi inserido de novo). É assim que distinguimos "gravei
+    // agora" de "essa chave já tinha sido gravada antes".
     const linhas = (await resposta.json().catch(() => [])) as Array<{ id: string }>;
     if (linhas.length > 0) {
       leadId = linhas[0].id;
@@ -181,117 +215,57 @@ export async function POST(request: Request) {
       jaExistia = true;
     }
   } catch (erro) {
-    console.error("[leads] Falha de rede/timeout ao gravar:", erro);
+    console.error(`[leads ${ref}] falha de rede/timeout ao gravar: ${descreverErro(erro)}`);
     // Resultado INCERTO (pode ter gravado e a resposta se perdeu) — não dá
-    // pra dizer "não foi salvo" com certeza. Como o cliente reenvia com a
-    // MESMA chave de idempotência, o retry natural resolve isso sem
-    // duplicar: se já tinha gravado, cai no ramo `jaExistia` acima.
+    // pra dizer "não foi salvo" com certeza. O cliente reenvia com a MESMA
+    // chave: se já tinha gravado, cai no ramo `jaExistia` abaixo, sem duplicar.
     return Response.json(
-      { erro: "Não consegui confirmar seu cadastro — tenta de novo." },
+      { erro: "Não consegui confirmar seu cadastro — tenta de novo.", ref },
       { status: 502 },
     );
   }
 
-  // 2) Avisar depois, fora do tempo de resposta — usando `after()` (Next.js
-  // 16), que roda depois do response ser enviado mas antes da função
-  // serverless encerrar de vez (via waitUntil, nativo da Vercel). Só na
-  // gravação NOVA: se a chave já existia, o aviso já foi tentado na
-  // primeira vez, e reenviar aqui duplicaria e-mail num simples retry.
-  if (!jaExistia) {
-    after(() =>
-      notificar(lead, atribuicao).catch((erro) =>
-        console.error(
-          `[leads] Lead ${leadId ?? "?"} salvo, mas o aviso falhou:`,
-          erro instanceof Error ? erro.message : erro,
-        ),
-      ),
-    );
+  if (jaExistia) {
+    // idempotencyKey é não-nulo aqui: só há conflito quando a chave existe.
+    const situacao = await conferirCadastroExistente(lead, idempotencyKey!);
+
+    if (situacao === "diferente") {
+      // Mesma chave, dados diferentes (a pessoa corrigiu algo depois de um
+      // erro). Nunca se sobrescreve um lead, e também não se finge sucesso:
+      // o cliente troca a chave e envia de novo.
+      return Response.json({ erro: "chave_reutilizada" }, { status: 409 });
+    }
+    if (situacao === "indisponivel") {
+      return Response.json(
+        { erro: "Não consegui confirmar seu cadastro — tenta de novo.", ref },
+        { status: 502 },
+      );
+    }
   }
 
+  // 2) Avisar depois, fora do tempo de resposta — usando `after()` (Next 16),
+  // que roda depois de a resposta ser enviada mas antes de a função
+  // serverless encerrar (via waitUntil, nativo da Vercel).
+  //
+  // Roda TAMBÉM no ramo `jaExistia`, de propósito: se a rota perdeu a
+  // resposta do banco (lead gravado, 502 pra pessoa) o aviso nunca foi
+  // tentado, e o retry é a chance de ele acontecer. Não duplica: a
+  // reivindicação em notificarLead() só deixa UMA tentativa enviar, e nada
+  // acontece se o lead já foi notificado.
+  const filtro = leadId ? { id: leadId } : { chave: idempotencyKey! };
+  after(() =>
+    notificarLead(filtro).catch((erro) =>
+      console.error(`[leads ${ref}] lead salvo, mas o aviso falhou: ${descreverErro(erro)}`),
+    ),
+  );
+
   // O recibo só existe neste caminho — gravação nova OU chave que já estava
-  // gravada (retry depois de resposta perdida). O descarte do honeypot acima
-  // responde ok SEM recibo, e é isso que impede um robô de virar conversão
-  // no tracking do cliente. É a própria chave de idempotência devolvida:
-  // opaca, sem dado pessoal, e estável entre retries — então o evento de
-  // conversão tem sempre o mesmo id, não importa quantas vezes a resposta
-  // chegue.
+  // gravada com os MESMOS dados. O descarte do honeypot acima responde ok SEM
+  // recibo, e é isso que impede um robô de virar conversão no tracking do
+  // cliente. É a própria chave de idempotência devolvida: opaca, sem dado
+  // pessoal, e estável entre retries — então o evento de conversão tem sempre
+  // o mesmo id, não importa quantas vezes a resposta chegue.
   return Response.json(
     idempotencyKey ? { ok: true, recibo: idempotencyKey } : { ok: true },
   );
-}
-
-async function notificar(lead: Lead, atribuicao: Atribuicao) {
-  if (!RESEND_API_KEY || !LEAD_NOTIFY_TO || !LEAD_NOTIFY_FROM) {
-    console.warn("[leads] Notificação por e-mail não configurada — pulando.");
-    return;
-  }
-
-  // Link que abre a conversa já endereçada: é o que faz você responder rápido.
-  const saudacao = encodeURIComponent(
-    `Oi, ${lead.nome.split(" ")[0]}! Aqui é da ZXP Direciona. Vi seu cadastro e quero marcar sua call de diagnóstico.`,
-  );
-  const linkWhatsapp = `https://wa.me/${whatsappInternacional(lead.whatsapp)}?text=${saudacao}`;
-
-  const resposta = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    signal: AbortSignal.timeout(8000),
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: LEAD_NOTIFY_FROM,
-      to: [LEAD_NOTIFY_TO],
-      reply_to: lead.email,
-      subject: `ZXP Direciona: ${lead.nome} (${lead.idade}) — ${lead.peso}`,
-      html: `
-        <div style="font-family:system-ui,sans-serif;line-height:1.6;color:#10100E">
-          <h2 style="margin:0 0 16px">Novo cadastro na ZXP Direciona</h2>
-          <p style="margin:0 0 4px"><strong>Nome:</strong> ${escapar(lead.nome)}</p>
-          <p style="margin:0 0 4px"><strong>Idade:</strong> ${escapar(lead.idade)} anos</p>
-          <p style="margin:0 0 4px"><strong>WhatsApp:</strong> ${escapar(mascaraWhatsapp(lead.whatsapp))}</p>
-          <p style="margin:0 0 4px"><strong>E-mail:</strong> ${escapar(lead.email)}</p>
-          <p style="margin:0 0 4px"><strong>O que mais pesa:</strong> ${escapar(lead.peso)}</p>
-          ${origemEmTexto(atribuicao)}
-          ${
-            lead.contexto
-              ? `<p style="margin:16px 0 4px"><strong>Contexto:</strong><br>${escapar(lead.contexto)}</p>`
-              : ""
-          }
-          <p style="margin:24px 0 0">
-            <a href="${linkWhatsapp}"
-               style="background:#F4B942;color:#10100E;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold">
-              Responder no WhatsApp
-            </a>
-          </p>
-        </div>
-      `,
-    }),
-  });
-
-  if (!resposta.ok) {
-    // Só status + início do corpo (não o corpo bruto inteiro): o erro do
-    // provedor pode ecoar dado pessoal do lead de volta na mensagem.
-    const detalhe = await resposta.text().catch(() => "");
-    throw new Error(`Resend ${resposta.status}: ${detalhe.slice(0, 200)}`);
-  }
-}
-
-/** Uma linha só com de onde o lead veio, ou vazio se veio direto. Passa por
- * escapar(): utm_* vem da URL, ou seja, de quem quiser montar um link. */
-function origemEmTexto(a: Atribuicao): string {
-  const partes = [a.utm_source, a.utm_medium, a.utm_campaign, a.referrer_host].filter(
-    (p): p is string => Boolean(p),
-  );
-  if (partes.length === 0) return "";
-  return `<p style="margin:0 0 4px"><strong>Origem:</strong> ${escapar(partes.join(" / "))}</p>`;
-}
-
-/** Evita que um lead com "<" no texto quebre (ou injete) o HTML do e-mail. */
-function escapar(texto: string) {
-  return texto
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }

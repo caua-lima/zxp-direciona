@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "check:launch": "node --no-warnings scripts/check-launch.mjs",
-    "check:launch:online": "node --no-warnings scripts/check-launch.mjs --online"
+    "check:launch:online": "node --no-warnings scripts/check-launch.mjs --online",
+    "notificacoes:reprocessar": "node --no-warnings --import ./scripts/ts-resolver.mjs scripts/reprocessar-notificacoes.mjs",
+    "typecheck:test": "tsc -p tsconfig.test.json",
+    "test": "npm run typecheck:test && node --no-warnings --import ./scripts/ts-resolver.mjs --test \"test/**/*.test.ts\""
   },
   "dependencies": {
     "next": "16.3.5",

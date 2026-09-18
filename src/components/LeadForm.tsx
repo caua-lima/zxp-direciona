@@ -43,7 +43,7 @@ export function LeadForm() {
   // Uma chave por "sessão" desta submissão — gerada uma vez (inicializador
   // preguiçoso do useState, não recria a cada render) e reusada em todo
   // retry, pra um reenvio depois de falha nunca virar um segundo lead.
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   // Origem lida da URL assim que o formulário monta (a query sobrevive a
   // reload; nada é guardado no aparelho). Se por algum motivo ainda for null
   // no envio, captura na hora.
@@ -84,17 +84,31 @@ export function LeadForm() {
     setFalhaEnvio(null);
 
     try {
-      const resposta = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.timeout(15000),
-        body: JSON.stringify({
-          ...campos,
-          empresa: honeypot,
-          idempotencyKey,
-          atribuicao: atribuicaoRef.current ?? capturarAtribuicao(),
-        }),
-      });
+      const enviarCom = (chave: string) =>
+        fetch("/api/leads", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: AbortSignal.timeout(15000),
+          body: JSON.stringify({
+            ...campos,
+            empresa: honeypot,
+            idempotencyKey: chave,
+            atribuicao: atribuicaoRef.current ?? capturarAtribuicao(),
+          }),
+        });
+
+      let chave = idempotencyKey;
+      let resposta = await enviarCom(chave);
+
+      // 409 = esta chave já gravou um cadastro com dados DIFERENTES (a pessoa
+      // corrigiu algo depois de um erro). O servidor não sobrescreve lead
+      // nenhum; aqui trocamos a chave e reenviamos uma vez, sem a pessoa
+      // precisar fazer nada. A correção vira um cadastro novo e correto.
+      if (resposta.status === 409) {
+        chave = crypto.randomUUID();
+        setIdempotencyKey(chave);
+        resposta = await enviarCom(chave);
+      }
 
       if (resposta.status === 422) {
         // O servidor revalida com as mesmas regras; se reprovou aqui, é porque
@@ -133,7 +147,7 @@ export function LeadForm() {
       // não. E só com recibo: o servidor devolve `recibo` apenas depois de
       // confirmar a gravação (o descarte do honeypot responde ok SEM recibo,
       // então um robô nunca vira conversão). HTTP 200 sozinho não basta.
-      if (dados.recibo === idempotencyKey) {
+      if (dados.recibo === chave) {
         track({ nome: "generate_lead", recibo: dados.recibo });
       }
 

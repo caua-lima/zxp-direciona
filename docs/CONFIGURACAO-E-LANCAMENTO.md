@@ -192,3 +192,98 @@ perguntado de novo.
   deduplicação. O `event_id` já vai no `generate_lead` pra facilitar depois.
 - **Link da política de privacidade no banner:** a página ainda não existe
   (depende dos dados jurídicos em `dadosPrivacidade`).
+
+---
+
+## Aviso por e-mail: como funciona e como reprocessar
+
+O e-mail de "novo cadastro" roda **depois** de a pessoa receber a resposta (não
+atrasa o cadastro) e registra em duas colunas de `leads` se já foi enviado:
+`notificado_em` (quando saiu) e `notificacao_reivindicada_em` (um "estou
+enviando agora" que vence em 5 minutos). Isso resolve os três jeitos de o aviso
+dar errado:
+
+| Situação | O que acontece |
+| --- | --- |
+| Resend fora do ar | Cadastro segue 200; a reivindicação é liberada; o lead fica com `notificado_em` vazio |
+| A função morre no meio do envio | A reivindicação vence sozinha em 5 min |
+| **O banco gravou, mas a rota perdeu a resposta** (a pessoa vê erro) | O lead existe e ninguém foi avisado. O retry dela (mesma chave) dispara o aviso — uma vez só |
+| 5 requisições idênticas ao mesmo tempo | 1 gravação e 1 e-mail: só uma consegue reivindicar |
+
+O e-mail é montado a partir da **linha salva no banco**, não do corpo da
+requisição, e o Resend recebe `Idempotency-Key: lead-<id>` (retido 24h) — então
+até um reenvio depois de "enviei mas não consegui marcar" não duplica.
+
+**Decisão de privacidade:** o texto livre que a pessoa escreve ("Quer contar
+mais?") **não vai no e-mail** — só um aviso de que ele existe. E-mail é onde
+texto pessoal (de adolescentes, aqui) mais se espalha. Leia o contexto direto na
+tabela `leads` do Supabase.
+
+### Reprocessar os avisos que não saíram
+
+```bash
+npm run notificacoes:reprocessar                 # lista o que seria enviado (dry-run)
+npm run notificacoes:reprocessar -- --enviar     # envia de verdade
+npm run notificacoes:reprocessar -- --dias 7     # janela (padrão 3, máx. 30)
+```
+
+O padrão é **dry-run** e há uma janela de dias de propósito: ao configurar o
+Resend pela primeira vez, todo cadastro antigo está "sem aviso" — a janela evita
+disparar e-mail de tudo de uma vez. Não imprime nome, telefone nem e-mail, só
+id e data. É manual; se um dia quiser automatizar, o caminho é um Vercel Cron
+chamando uma rota protegida — não foi feito porque exigiria uma rota
+autenticada só pra isso.
+
+### Migrações — ordem e o que acontece sem cada uma
+
+Rode em ordem no SQL Editor do Supabase (todas idempotentes). Instalação nova:
+só `supabase/schema.sql`.
+
+| Migração | Sem ela |
+| --- | --- |
+| `0001_confirmacao_responsavel` | Cadastro de menor de idade falha |
+| `0002_idempotencia_e_rate_limit` | Sem proteção de duplicata; rate limit inativo |
+| `0003_atribuicao` | **Todo cadastro com UTM/referrer é recusado (502)** — pré-requisito de deploy |
+| `0004_notificacao` | Cadastro funciona; só o **aviso por e-mail** falha. Rode antes de ligar o Resend |
+
+`npm run check:launch:online` diz quais faltam.
+
+---
+
+## Testes
+
+```bash
+npm test
+```
+
+Faz o type-check dos testes (`tsconfig.test.json`) e roda a suíte com o test
+runner **nativo do Node** — nenhuma dependência nova. Os testes executam o
+código real de `src/` (o Node roda TypeScript direto; `scripts/ts-resolver.mjs`
+só ensina o alias `@/`).
+
+O que cobrem, e por quê esses:
+
+- **Telefone e validação** — os casos reproduzidos da auditoria (+55 colado, DDD
+  55 real, zeros, celular sem 9), a máscara, menores de idade, e que nada
+  vindo da rede é coagido (`"true"` não vira consentimento).
+- **Rota `/api/leads`** contra um Supabase/Resend falsos que reproduzem as
+  semânticas reais (chave única, UPDATE condicional atômico, erros que citam os
+  dados da linha): 415/403/413/400/422/429/503, honeypot sem recibo, **retry
+  após resposta perdida**, **5 envios simultâneos → 1 gravação e 1 e-mail**,
+  correção de dados na mesma chave (409, nunca sobrescreve), Resend fora/lento,
+  e **nenhum dado pessoal em log**.
+- **Consentimento e medição** — nada carrega antes do "sim", ordem do Consent
+  Mode, granularidade, revogação, recibo contado uma vez, nenhum dado pessoal
+  nos eventos, ID malformado ignorado.
+- **HTML gerado pelo build** — âncoras que apontam pra ids reais, sem
+  placeholder, um `<h1>`, todo campo com `<label>`, nenhum terceiro no build
+  padrão. (Pulado, com o motivo à vista, se não houver `npm run build` antes.)
+
+Foram validados por **mutação**: reintroduzir o bug do +55, o aviso que só saía
+na 1ª gravação, o log do corpo bruto do banco e a aceitação de dados diferentes
+na mesma chave — cada um derruba exatamente o teste feito pra ele.
+
+**O que os testes não substituem:** clicar de verdade. Interação real, layout em
+telas diferentes e leitor de tela foram verificados à mão no navegador, mas não
+são regressão automática. Também não há como testar contra as contas reais de
+GA4/Meta/Resend — `check:launch` lembra disso.

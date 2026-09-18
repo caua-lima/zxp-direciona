@@ -178,3 +178,36 @@ export function normalizarLead(body: unknown): Lead {
     confirmacaoResponsavel: b.confirmacaoResponsavel === true,
   };
 }
+
+/** Linha da tabela `leads` como o banco devolve — só os campos comparáveis. */
+export type LinhaLead = {
+  nome: string;
+  whatsapp: string;
+  email: string;
+  idade: string;
+  peso: string;
+  contexto: string | null;
+  confirmacao_responsavel: boolean;
+};
+
+/**
+ * A mesma chave de idempotência chegou de novo: é um retry do MESMO cadastro
+ * ou alguém reaproveitou a chave com dados diferentes?
+ *
+ * Importa porque a pessoa pode receber um erro, CORRIGIR o telefone e reenviar
+ * — com a mesma chave. Se a rota respondesse "sucesso" só porque a chave já
+ * existe, o cadastro antigo (com o erro) ficaria no banco e a correção seria
+ * descartada em silêncio. Nunca se sobrescreve um lead; se os dados diferem,
+ * a rota responde 409 e o cliente troca a chave.
+ */
+export function cadastroIdentico(lead: Lead, linha: LinhaLead): boolean {
+  return (
+    lead.nome === linha.nome &&
+    lead.whatsapp === linha.whatsapp &&
+    lead.email === linha.email &&
+    lead.idade === linha.idade &&
+    lead.peso === linha.peso &&
+    lead.contexto === (linha.contexto ?? "") &&
+    lead.confirmacaoResponsavel === linha.confirmacao_responsavel
+  );
+}

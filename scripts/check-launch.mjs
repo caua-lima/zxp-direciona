@@ -198,6 +198,20 @@ async function verificarOnline() {
         );
       }
 
+      // Migração 0004: controle do aviso por e-mail. NÃO bloqueia — o INSERT
+      // do cadastro não usa estas colunas; sem elas só o e-mail falha.
+      const aviso0004 = await fetch(
+        `${url}/rest/v1/leads?select=notificado_em,notificacao_reivindicada_em&limit=0`,
+        { headers: cabecalhos, signal: AbortSignal.timeout(10000) },
+      );
+      if (aviso0004.ok) {
+        confirmado("Colunas de controle do aviso por e-mail existem (migração 0004).");
+      } else {
+        aviso(
+          "Migração 0004 não aplicada (notificado_em / notificacao_reivindicada_em). O cadastro funciona; o aviso por e-mail NÃO — rode supabase/migrations/0004_notificacao.sql antes de configurar o Resend.",
+        );
+      }
+
       const limite = await fetch(`${url}/rest/v1/rate_limit_hits?select=bucket&limit=0`, {
         headers: cabecalhos,
         signal: AbortSignal.timeout(10000),
@@ -248,10 +262,13 @@ secao("🟡 AVISO — resolva antes de anunciar", avisos, "Nenhum.");
 secao("🔵 VERIFICAÇÃO MANUAL — este script não consegue confirmar", verificar, "—");
 
 console.log("\n" + "═".repeat(70));
+// process.exitCode em vez de process.exit(): no Windows, exit() com uma
+// conexão de rede ainda fechando (modo --online) pode abortar o processo e
+// transformar o resultado num código de crash.
 if (bloqueios.length > 0) {
   console.log(`❌ ${bloqueios.length} bloqueio(s). Não ligue tráfego pago ainda.`);
-  process.exit(1);
+  process.exitCode = 1;
 } else {
   console.log("✅ Sem bloqueios conhecidos. Ainda assim, resolva os avisos e confirme as verificações manuais antes de anunciar.");
-  process.exit(0);
+  process.exitCode = 0;
 }

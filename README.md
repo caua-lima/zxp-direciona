@@ -28,6 +28,10 @@ npm run dev
 
 Abre em http://localhost:3000.
 
+Outros comandos: `npm test` (testes, sem dependência nova), `npm run check:launch` /
+`check:launch:online` (o que falta antes de anunciar) e
+`npm run notificacoes:reprocessar` (reenvia avisos que não saíram).
+
 ## Onde editar o conteúdo
 
 | O quê | Arquivo |

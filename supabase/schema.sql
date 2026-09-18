@@ -47,7 +47,13 @@ create table if not exists public.leads (
   utm_campaign text,
   utm_content text,
   utm_term text,
-  referrer_host text
+  referrer_host text,
+
+  -- Controle do aviso por e-mail (ver src/lib/notificacao.ts). notificado_em
+  -- NULL = ainda não avisamos; a segunda coluna é uma lease de 5 min que
+  -- impede dois envios simultâneos do mesmo lead.
+  notificado_em timestamptz,
+  notificacao_reivindicada_em timestamptz
 );
 
 create index if not exists leads_criado_em_idx on public.leads (criado_em desc);

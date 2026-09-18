@@ -12,13 +12,14 @@ import { supabaseFetch, supabaseConfigurado } from "./supabase";
 
 const JANELA_MS = 10 * 60 * 1000; // 10 minutos
 const LIMITE_POR_JANELA = 5;
-const PEPPER = process.env.RATE_LIMIT_PEPPER ?? "";
 
 /** IP pseudonimizado (nunca gravado em texto puro) + data — expira sozinho
  * pela janela de tempo, não precisa de rotina de limpeza dedicada. */
 async function bucketDoIp(ip: string): Promise<string> {
   const dataUTC = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  const material = `${PEPPER}:${ip}:${dataUTC}`;
+  // Lido no uso (não na importação), como o resto da configuração.
+  const pepper = process.env.RATE_LIMIT_PEPPER ?? "";
+  const material = `${pepper}:${ip}:${dataUTC}`;
   const digest = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(material),
@@ -40,7 +41,7 @@ export function ipDaRequisicao(request: Request): string {
 export async function verificarLimite(
   ip: string,
 ): Promise<{ permitido: boolean; retryAfterSegundos: number }> {
-  if (!supabaseConfigurado) {
+  if (!supabaseConfigurado()) {
     // Sem banco não tem como checar — deixa passar. A rota principal já
     // barra o cadastro em si por falta de configuração (503), então isso
     // não abre brecha real.

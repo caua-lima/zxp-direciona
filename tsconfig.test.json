@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "plugins": [],
+    "paths": {
+      "@/*": ["./src/*"],
+      "next/server": ["./test/dubles/next-server.ts"]
+    }
+  },
+  "include": ["test/**/*.ts", "next-env.d.ts"],
+  "exclude": ["node_modules"]
+}
