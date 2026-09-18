@@ -26,6 +26,19 @@ export const mentor = {
   ],
 };
 
+/**
+ * True só quando `name` e `bio` de fato foram preenchidos (não começam com
+ * "[", a convenção de placeholder usada acima). Usado por Authority.tsx pra
+ * decidir se a seção aparece pro público.
+ *
+ * Publicar "[Nome do mentor]" e "Bio curta:..." pra um visitante de verdade
+ * é pior do que não ter a seção — planta desconfiança logo na parte da
+ * página que deveria construir confiança. Enquanto isso for true, a seção
+ * fica fora do ar; não é um bug, é a checagem de lançamento funcionando.
+ */
+export const mentorPreenchido =
+  !mentor.name.startsWith("[") && !mentor.bio.startsWith("[");
+
 /* PLACEHOLDER OPCIONAL — DEPOIMENTOS
  *
  * Nenhum depoimento foi fornecido, então a seção não existe na página.

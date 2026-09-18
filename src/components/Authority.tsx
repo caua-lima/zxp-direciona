@@ -1,9 +1,13 @@
 import Image from "next/image";
 import { Section } from "./Section";
 import { Reveal } from "./Reveal";
-import { mentor } from "@/config/mentor";
+import { mentor, mentorPreenchido } from "@/config/mentor";
 
 export function Authority() {
+  // Publicar "[Nome do mentor]" pra um visitante de verdade é pior do que
+  // não mostrar a seção — ver o comentário em src/config/mentor.ts.
+  if (!mentorPreenchido) return null;
+
   return (
     <Section eyebrow="Quem conduz" title="Quem vai estar do outro lado da call">
       <Reveal>
