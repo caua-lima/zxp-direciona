@@ -31,11 +31,28 @@ create table if not exists public.leads (
   -- Campos do micro-CRM (fase 2). Já existem pra não precisar de migração.
   status text not null default 'novo'
     check (status in ('novo','contatado','call_marcada','call_feita','fechado','perdido')),
-  observacoes text
+  observacoes text,
+
+  -- Chave gerada pelo cliente por tentativa de submissão — permite reenviar
+  -- com segurança depois de uma falha, sem duplicar o lead. NULL é normal
+  -- (cliente sem a chave, ou lead antigo); Postgres não considera NULL
+  -- igual a NULL, então isso nunca cria falso conflito entre leads sem chave.
+  idempotency_key text
 );
 
 create index if not exists leads_criado_em_idx on public.leads (criado_em desc);
 create index if not exists leads_status_idx on public.leads (status);
+create unique index if not exists leads_idempotency_key_idx on public.leads (idempotency_key);
+
+-- Rate limit por IP pseudonimizado (hash, nunca texto puro) — ver
+-- src/lib/rateLimit.ts.
+create table if not exists public.rate_limit_hits (
+  bucket text not null,
+  ocorrido_em timestamptz not null default now()
+);
+
+create index if not exists rate_limit_hits_bucket_idx on public.rate_limit_hits (bucket, ocorrido_em);
+alter table public.rate_limit_hits enable row level security;
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- Segurança: RLS ligado e NENHUMA policy criada.

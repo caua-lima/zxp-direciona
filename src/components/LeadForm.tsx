@@ -29,6 +29,10 @@ export function LeadForm() {
   const [falhaEnvio, setFalhaEnvio] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
+  // Uma chave por "sessão" desta submissão — gerada uma vez (inicializador
+  // preguiçoso do useState, não recria a cada render) e reusada em todo
+  // retry, pra um reenvio depois de falha nunca virar um segundo lead.
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   function atualizar<C extends keyof Lead>(campo: C, valor: Lead[C]) {
     setCampos((atual) => ({ ...atual, [campo]: valor }));
@@ -54,7 +58,8 @@ export function LeadForm() {
       const resposta = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...campos, empresa: honeypot }),
+        signal: AbortSignal.timeout(15000),
+        body: JSON.stringify({ ...campos, empresa: honeypot, idempotencyKey }),
       });
 
       if (resposta.status === 422) {
@@ -67,14 +72,34 @@ export function LeadForm() {
         return;
       }
 
+      if (resposta.status === 429) {
+        setFalhaEnvio(
+          "Muitas tentativas em pouco tempo. Espera alguns minutos e tenta de novo.",
+        );
+        setEnviando(false);
+        return;
+      }
+
+      if (resposta.status === 503) {
+        setFalhaEnvio(
+          "O cadastro está temporariamente indisponível. Tenta de novo em instantes — se continuar, me chama direto no WhatsApp.",
+        );
+        setEnviando(false);
+        return;
+      }
+
       if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+
+      const dados = await resposta.json().catch(() => null);
+      if (!dados?.ok) throw new Error("Resposta inesperada do servidor.");
 
       setEnviado(true);
     } catch {
-      // O cadastro NÃO foi salvo. Dizer "recebido" aqui seria mentir e o lead
-      // sumiria — então mostramos a falha e oferecemos o WhatsApp como saída.
+      // Não dá pra saber com certeza se chegou a gravar (pode ter sido só a
+      // resposta que se perdeu) — mas como reenviar usa a MESMA chave de
+      // idempotência, tentar de novo é seguro: nunca cria um segundo lead.
       setFalhaEnvio(
-        "Não consegui enviar seu cadastro agora. Tenta de novo em instantes — se continuar, me chama direto no WhatsApp.",
+        "Não consegui confirmar seu cadastro. Tenta de novo — é seguro, não vai duplicar. Se continuar, me chama direto no WhatsApp.",
       );
     } finally {
       setEnviando(false);
