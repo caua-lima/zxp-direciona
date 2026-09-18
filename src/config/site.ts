@@ -30,13 +30,12 @@ export type ContatoComercial = {
 };
 
 /**
- * ⚠️ PENDENTE — nenhuma tela hoje oferece um jeito de falar com a ZXP
- * Direciona que não seja o número que a PRÓPRIA pessoa acabou de digitar no
- * formulário. Preencha com o WhatsApp comercial real (só dígitos, com DDD e
- * DDD do país se relevante — ex: "5511987654321").
+ * WhatsApp comercial, mostrado nas telas de sucesso e de falha do formulário
+ * como link wa.me. Só dígitos, DDD + número, sem o 55 (o código do país é
+ * acrescentado na hora de montar o link). Este número fica público na página.
  */
 export const contatoComercial: ContatoComercial = {
-  whatsapp: null,
+  whatsapp: "19989159925",
 };
 
 export type DadosPrivacidade = {
