@@ -15,8 +15,12 @@ const inter = Inter({
   display: "swap",
 });
 
-// Troque pela URL real quando publicar (afeta OG tags e canonical).
-const siteUrl = "https://direciona.zxpsolutions.com.br";
+// URL que está de fato servindo o site hoje (confirmado por HTTP 200 em
+// 17/09/2026). O domínio próprio "direciona.zxpsolutions.com.br" usado antes
+// aqui era só um placeholder — nunca chegou a ser registrado/configurado, e
+// apontar o canonical pra um domínio que não resolve é pior que não ter
+// canonical nenhum. Troque para o domínio definitivo assim que existir.
+const siteUrl = "https://rumo-lp.vercel.app";
 
 const descricao =
   "ZXP Direciona é a mentoria de direção profissional da ZXP Solutions, para jovens de 16 a 25 anos travados entre faculdade, carreira e futuro. Agende sua call de diagnóstico gratuita.";
