@@ -190,8 +190,9 @@ perguntado de novo.
 - **gclid / fbclid** (identificadores de clique) e **API de Conversões / conversão
   offline.** Não eram pré-requisito; exigem regras próprias de consentimento e
   deduplicação. O `event_id` já vai no `generate_lead` pra facilitar depois.
-- **Link da política de privacidade no banner:** a página ainda não existe
-  (depende dos dados jurídicos em `dadosPrivacidade`).
+- **Página de privacidade:** existe em `/privacidade` (`src/app/privacidade/page.tsx`),
+  com link no rodapé, no formulário e no banner. Cada frase descreve o que o
+  código faz; se mudar a coleta ou um fornecedor, mude o texto no mesmo commit.
 
 ---
 

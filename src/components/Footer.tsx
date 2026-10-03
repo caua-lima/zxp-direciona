@@ -1,6 +1,7 @@
 import { ZMark } from "./ZWatermark";
 import { PreferenciasMedicao } from "./PreferenciasMedicao";
 import { trackingAtivo } from "@/config/tracking";
+import { privacidadePublicada } from "@/config/site";
 
 export function Footer() {
   return (
@@ -15,6 +16,14 @@ export function Footer() {
         <p className="text-xs text-marfim/55">
           © {new Date().getFullYear()} ZXP Solutions
         </p>
+        {privacidadePublicada && (
+          <a
+            href="/privacidade"
+            className="flex min-h-11 items-center text-xs text-marfim/65 underline underline-offset-4 hover:text-marfim"
+          >
+            Privacidade
+          </a>
+        )}
         {/* Só aparece se houver medição configurada — sem ID nenhum não há
             o que revogar. */}
         {trackingAtivo && <PreferenciasMedicao />}

@@ -13,7 +13,7 @@ import {
   type Lead,
   type ErrosLead,
 } from "@/lib/lead";
-import { contatoComercial } from "@/config/site";
+import { contatoComercial, privacidadePublicada } from "@/config/site";
 import { capturarAtribuicao, type Atribuicao } from "@/lib/atribuicao";
 import { track } from "@/lib/tracking/events";
 
@@ -473,6 +473,18 @@ export function LeadForm() {
                 Usamos seus dados pra entrar em contato sobre a conversa. Eles
                 ficam guardados nos serviços que a ZXP Direciona usa pra operar
                 o site (banco de dados e e-mail).
+                {privacidadePublicada && (
+                  <>
+                    {" "}
+                    <a
+                      href="/privacidade"
+                      className="underline underline-offset-4 hover:text-marfim"
+                    >
+                      Saiba mais sobre privacidade
+                    </a>
+                    .
+                  </>
+                )}
               </p>
             </form>
           )}

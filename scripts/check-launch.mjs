@@ -124,8 +124,8 @@ const privacidadeIncompleta =
 if (privacidadeIncompleta) {
   aviso(
     "Dados de privacidade incompletos (src/config/site.ts: controlador/" +
-      "canalContato) — a página de privacidade ainda não existe no site; " +
-      "isto é pré-requisito pra criá-la de forma verdadeira, não invente.",
+      "canalContato) — sem eles /privacidade devolve 404 e os links pra ela " +
+      "somem. Preencha com dados reais, não invente.",
   );
 }
 

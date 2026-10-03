@@ -1,10 +1,9 @@
 import type { MetadataRoute } from "next";
-import { site } from "@/config/site";
+import { privacidadePublicada, site } from "@/config/site";
 
-// A LP é uma página só — sitemap de uma linha só é a coisa certa aqui, sem
-// inventar rotas que não existem.
+// Só as rotas que existem de fato: a LP e, quando publicada, a de privacidade.
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
+  const rotas: MetadataRoute.Sitemap = [
     {
       url: site.urlPublica,
       lastModified: new Date(),
@@ -12,4 +11,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
   ];
+  if (privacidadePublicada) {
+    rotas.push({
+      url: `${site.urlPublica}/privacidade`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.2,
+    });
+  }
+  return rotas;
 }

@@ -18,6 +18,7 @@ import {
   type OrigemWhatsapp,
   type PosicaoCta,
 } from "@/lib/tracking/events";
+import { privacidadePublicada } from "@/config/site";
 
 /**
  * Liga a medição — mas só se houver algum ID configurado. Sem ID (o estado
@@ -135,6 +136,15 @@ function BannerConsentimento({
         Podemos usar ferramentas de terceiros pra entender de onde vêm os
         visitantes e se os anúncios funcionam. Nada disso é necessário pra você
         se cadastrar — recusar não muda nada no site.
+        {privacidadePublicada && (
+          <>
+            {" "}
+            <a href="/privacidade" className="underline underline-offset-4">
+              Privacidade
+            </a>
+            .
+          </>
+        )}
       </p>
 
       {personalizando && (

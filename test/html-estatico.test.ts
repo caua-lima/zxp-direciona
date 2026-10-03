@@ -2,7 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { site } from "@/config/site";
+import { dadosPrivacidade, site } from "@/config/site";
 import { gruposEntregaveis } from "@/config/oferta";
 
 /**
@@ -101,3 +101,35 @@ describe("HTML gerado pelo build", opcoes, () => {
     }
   });
 });
+
+const caminhoPrivacidade = path.join(process.cwd(), ".next", "server", "app", "privacidade.html");
+const existePrivacidade = existsSync(caminhoPrivacidade);
+const htmlPrivacidade = existePrivacidade ? readFileSync(caminhoPrivacidade, "utf8") : "";
+
+describe(
+  "Página de privacidade gerada pelo build",
+  existePrivacidade ? {} : { skip: "sem .next/server/app/privacidade.html (rode `npm run build`; a página só existe com dadosPrivacidade preenchido)" },
+  () => {
+    test("diz quem é o responsável e dá o canal de contato de site.ts", () => {
+      assert.ok(dadosPrivacidade.controlador && dadosPrivacidade.canalContato);
+      assert.ok(htmlPrivacidade.includes(dadosPrivacidade.controlador));
+      assert.ok(htmlPrivacidade.includes(`mailto:${dadosPrivacidade.canalContato}`));
+    });
+
+    test("tem um único h1, canonical próprio e nenhum placeholder", () => {
+      assert.equal((htmlPrivacidade.match(/<h1[\s>]/g) ?? []).length, 1);
+      assert.ok(htmlPrivacidade.includes(`rel="canonical" href="${site.urlPublica}/privacidade"`));
+      assert.ok(!/\[[A-Z][^\]]{2,40}\]/.test(htmlPrivacidade.replace(/<script[\s\S]*?<\/script>/g, "")), "placeholder na página");
+    });
+
+    test("não promete o que ninguém verificou", () => {
+      for (const proibido of ["100% segur", "totalmente segur", "conformidade total", "nunca compartilh", "não vendemos"]) {
+        assert.ok(!htmlPrivacidade.toLowerCase().includes(proibido), `promessa não verificável: ${proibido}`);
+      }
+    });
+
+    test("a página principal aponta pra ela (rodapé e formulário)", () => {
+      assert.ok((html.match(/href="\/privacidade"/g) ?? []).length >= 2);
+    });
+  },
+);

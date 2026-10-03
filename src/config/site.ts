@@ -47,12 +47,15 @@ export type DadosPrivacidade = {
 };
 
 /**
- * ⚠️ PENDENTE — precisa de decisão sua, não é algo que eu deva inventar
- * (CNPJ, endereço e "conformidade total" não fabricados). Sem isto
- * preenchido, a página de privacidade (ainda não construída) não pode ser
- * publicada de forma verdadeira.
+ * Informados pelo dono. Aparecem em /privacidade (src/app/privacidade). Com
+ * qualquer um dos dois em null, a página devolve 404 e os links pra ela somem.
+ * Não acrescente CNPJ ou endereço que ninguém informou.
  */
 export const dadosPrivacidade: DadosPrivacidade = {
-  controlador: null,
-  canalContato: null,
+  controlador: "Cauã Lima",
+  canalContato: "caua.lm4@gmail.com",
 };
+
+export const privacidadePublicada = Boolean(
+  dadosPrivacidade.controlador && dadosPrivacidade.canalContato,
+);
