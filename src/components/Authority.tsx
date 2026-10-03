@@ -9,16 +9,16 @@ export function Authority() {
   if (!mentorPreenchido) return null;
 
   return (
-    <Section eyebrow="Quem conduz" title="Quem vai estar do outro lado da call">
+    <Section eyebrow="Quem conduz" title="Quem vai estar do outro lado da conversa">
       <Reveal>
-        <div className="card-destaque flex flex-col gap-6 rounded-2xl p-6 sm:flex-row sm:gap-8 sm:p-8">
-          <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl border border-dourado/25 bg-onyx">
+        <div className="card-destaque flex flex-col gap-6 rounded-2xl p-6 sm:flex-row sm:items-center sm:gap-8 sm:p-8">
+          <div className="relative h-36 w-36 shrink-0 sm:h-44 sm:w-44 overflow-hidden rounded-2xl border border-dourado/25 bg-onyx">
             {mentor.photoUrl ? (
               <Image
                 src={mentor.photoUrl}
                 alt={mentor.name}
                 fill
-                sizes="112px"
+                sizes="(min-width: 640px) 176px, 144px"
                 className="object-cover"
               />
             ) : (
@@ -37,18 +37,26 @@ export function Authority() {
             <p className="mt-1 text-sm font-semibold text-dourado">
               {mentor.role}
             </p>
-            <p className="mt-4 leading-relaxed text-marfim/70">{mentor.bio}</p>
+            {mentor.bioEhCitacao ? (
+              <blockquote className="mt-4 border-l-2 border-dourado/50 pl-4 text-lg leading-relaxed text-marfim/85">
+                “{mentor.bio}”
+              </blockquote>
+            ) : (
+              <p className="mt-4 leading-relaxed text-marfim/70">{mentor.bio}</p>
+            )}
 
-            <ul className="mt-5 flex flex-wrap gap-2">
-              {mentor.highlights.map((h) => (
-                <li
-                  key={h}
-                  className="rounded-full border border-marfim/12 bg-marfim/[0.04] px-3 py-1.5 text-xs text-marfim/60"
-                >
-                  {h}
-                </li>
-              ))}
-            </ul>
+            {mentor.highlights.length > 0 && (
+              <ul className="mt-5 flex flex-wrap gap-2">
+                {mentor.highlights.map((h) => (
+                  <li
+                    key={h}
+                    className="rounded-full border border-marfim/12 bg-marfim/[0.04] px-3 py-1.5 text-xs text-marfim/60"
+                  >
+                    {h}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </Reveal>

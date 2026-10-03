@@ -1,29 +1,23 @@
 /**
- * ⚠️ PLACEHOLDER — PREENCHA ANTES DE PUBLICAR
+ * Quem conduz a mentoria. Dados informados pelo dono — nada aqui é inventado.
  *
- * Os dados reais (nome, trajetória, credenciais) não foram fornecidos, então
- * nada aqui é verdadeiro. Nenhum número, resultado ou depoimento foi inventado
- * de propósito — troque os campos abaixo pelos dados reais.
- *
- * Para usar uma foto: coloque o arquivo em `public/` (ex: public/mentor.jpg),
- * preencha `photoUrl` com "/mentor.jpg" e o componente passa a exibi-la
- * automaticamente no lugar do placeholder.
+ * A foto é real (public/mentor.jpg), só com fundo e recorte tratados. Não
+ * troque por imagem gerada. Credenciais em `highlights`: só as verdadeiras;
+ * com a lista vazia, a linha de credenciais some da página.
  */
 export const mentor = {
-  name: "[Nome do mentor]",
-  role: "[Como se apresenta — ex: Fundador da ZXP Direciona]",
+  name: "Cauã Lima",
+  role: "À frente da ZXP Direciona",
 
-  /** Caminho da foto em /public. Deixe null pra manter o placeholder. */
-  photoUrl: null as string | null,
+  /** Caminho da foto em /public. Com null, a seção mostra um placeholder. */
+  photoUrl: "/mentor.jpg" as string | null,
 
-  bio: "[Bio curta: sua trajetória, o que te credencia a conduzir esse processo e por que você criou a ZXP Direciona. 3-4 frases, sem números inventados.]",
+  /** Hoje é uma frase dele, em primeira pessoa — por isso `bioEhCitacao`. */
+  bio: "Sempre dei o próximo passo antes de enxergar o chão inteiro. E Deus nunca deixou faltar onde pisar.",
+  bioEhCitacao: true,
 
-  /** Credenciais reais — remova as que não usar. */
-  highlights: [
-    "[Credencial real #1]",
-    "[Credencial real #2]",
-    "[Credencial real #3]",
-  ],
+  /** Credenciais reais. Vazio = a lista não aparece. */
+  highlights: [] as string[],
 };
 
 /**

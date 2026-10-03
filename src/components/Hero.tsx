@@ -1,4 +1,4 @@
-import { ZWatermark } from "./ZWatermark";
+import Image from "next/image";
 
 const garantias = ["Gratuita", "Individual", "Sem compromisso"];
 
@@ -8,10 +8,19 @@ export function Hero() {
       id="top"
       className="grain relative isolate overflow-hidden px-6 pt-32 pb-20 sm:pt-40 sm:pb-28"
     >
-      {/* Camadas de fundo — brilho dourado + marca Z, agora maior e à direita
-          (o conteúdo é mais largo que antes, sobra espaço pra ela respirar). */}
+      {/* Camadas de fundo — imagem com o Z em linhas douradas à direita (o
+          lado esquerdo dela é liso, é onde o texto fica) + brilho dourado.
+          Decorativa: alt vazio. No celular fica mais apagada, porque ali as
+          linhas passam por trás do texto. */}
+      <Image
+        src="/hero-fundo.jpg"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="pointer-events-none -z-20 object-cover object-right opacity-50 sm:opacity-100"
+      />
       <div className="glow-dourado absolute inset-0 -z-10" aria-hidden="true" />
-      <ZWatermark className="pointer-events-none absolute -top-16 -right-20 -z-10 h-72 w-72 text-dourado/[0.06] sm:h-[30rem] sm:w-[30rem] lg:right-[6%] lg:h-[36rem] lg:w-[36rem]" />
 
       <div className="mx-auto max-w-[70rem]">
         <div className="max-w-3xl">
