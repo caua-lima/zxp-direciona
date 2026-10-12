@@ -32,8 +32,8 @@ quiser.
 | Nome da marca, URL pública | `src/config/site.ts` → `site` | Conteúdo (editar o arquivo) |
 | WhatsApp comercial | `src/config/site.ts` → `contatoComercial` | Conteúdo |
 | Dados de privacidade (controlador, canal de contato) | `src/config/site.ts` → `dadosPrivacidade` | Conteúdo |
-| Bio de quem conduz | `src/config/mentor.ts` → `mentor` | Conteúdo |
-| Nome e textos do plano | `src/config/plano.ts` → `plano` | Conteúdo |
+| Quem conduz: nome, foto, apresentação | `src/config/mentor.ts` → `mentor` | Conteúdo |
+| Link e mensagem do WhatsApp | `src/lib/contato.ts` | Conteúdo |
 | Credenciais (Supabase, Resend) | `.env.local` / Vercel | **Segredo** |
 
 **Conteúdo** (nome, WhatsApp, textos) fica em arquivos `.ts` versionados —
@@ -152,11 +152,11 @@ perguntado de novo.
 
 | Evento | Quando | Vai pra |
 | --- | --- | --- |
-| `cta_click` (`cta_position`: header/hero/meio/mobile_fixo) | Clique num CTA | GA4 / GTM |
+| `cta_click` (`cta_position`: header/hero/mobile_fixo) | Clique num CTA (todos levam ao formulário) | GA4 / GTM |
 | `lead_form_start` | 1ª interação com o formulário | GA4 / GTM |
 | `lead_form_error` (`error_fields`: só os NOMES dos campos) | Erro de validação | GA4 / GTM |
 | `generate_lead` | **Só** depois de o servidor confirmar a gravação (recibo) | GA4 / GTM, e `Lead` no Meta |
-| `whatsapp_click` (`click_origin`: sucesso/falha) | Clique no WhatsApp comercial | GA4 / GTM |
+| `whatsapp_click` (`click_origin`: sucesso/falha) | Clique no botão que abre o WhatsApp do Cauã, depois do envio (sucesso) ou como contingência (falha) | GA4 / GTM |
 
 - **`lead_form_*` e não `form_start`:** `form_start` e `form_submit` são eventos
   **automáticos** do GA4 (Medição otimizada → Interações com formulários). Um
@@ -170,6 +170,14 @@ perguntado de novo.
   o texto livre nem existem nos tipos dos eventos.
 - Evento rejeitado por falta de consentimento **não fica em fila** e não é
   reenviado se a pessoa aceitar depois.
+- **São coisas diferentes, e só as três primeiras a página enxerga:** clique
+  no CTA, cadastro salvo (`generate_lead`), WhatsApp aberto
+  (`whatsapp_click`), mensagem enviada, call agendada, comparecimento e
+  contratação. `whatsapp_click` **não** é lead salvo, nem mensagem enviada,
+  nem agendamento — o link só abre a conversa. Agendamento, comparecimento e
+  venda só existem se forem registrados depois, no CRM.
+- **Recusa em outra aba vale nesta:** a escolha é relida quando o navegador
+  avisa a mudança, e a falta de escolha válida desliga os fornecedores.
 
 ### Como validar (código instalado ≠ evento validado ≠ conversão em uso)
 
@@ -215,10 +223,26 @@ O e-mail é montado a partir da **linha salva no banco**, não do corpo da
 requisição, e o Resend recebe `Idempotency-Key: lead-<id>` (retido 24h) — então
 até um reenvio depois de "enviei mas não consegui marcar" não duplica.
 
-**Decisão de privacidade:** o texto livre que a pessoa escreve ("Quer contar
-mais?") **não vai no e-mail** — só um aviso de que ele existe. E-mail é onde
-texto pessoal (de adolescentes, aqui) mais se espalha. Leia o contexto direto na
-tabela `leads` do Supabase.
+**Decisão de privacidade:** o relato que a pessoa escreve (obrigatório, de 60 a
+1.500 caracteres) **não vai no e-mail** — só um aviso de que ele existe. E-mail
+é onde texto pessoal (de adolescentes, aqui) mais se espalha. Leia o contexto
+no CRM ou direto na tabela `leads`.
+
+O botão do e-mail abre o WhatsApp da pessoa com a mensagem "Oi, [primeiro
+nome]! Aqui é o Cauã, da ZXP Direciona...". Ele só **abre** a conversa.
+
+**O que `notificado_em` significa — e o que não significa.** Significa que a
+API do Resend **aceitou** o pedido de envio. Não prova que o e-mail chegou à
+caixa de entrada, nem que foi lido. A chave de deduplicação do Resend vale 24h,
+não pra sempre. Ou seja: o aviso é uma conveniência, não a garantia de que
+ninguém fica sem resposta — a fonte da verdade é a tabela `leads`.
+
+**Rotina operacional recomendada** (enquanto não houver automação):
+
+- uma vez por dia útil, rodar o comando abaixo em dry-run e olhar se há fila;
+- se houver, entender por quê (Resend fora, domínio, chave) antes de `--enviar`;
+- conferir a lista de cadastros no CRM/Supabase com a mesma frequência, porque
+  cadastro salvo sem resposta é oportunidade perdida mesmo com o e-mail em dia.
 
 ### Reprocessar os avisos que não saíram
 
@@ -246,16 +270,64 @@ só `supabase/schema.sql`.
 | `0002_idempotencia_e_rate_limit` | Sem proteção de duplicata; rate limit inativo |
 | `0003_atribuicao` | **Todo cadastro com UTM/referrer é recusado (502)** — pré-requisito de deploy |
 | `0004_notificacao` | Cadastro funciona; só o **aviso por e-mail** falha. Rode antes de ligar o Resend |
+| `0005_rate_limit_atomico` | Cadastro funciona; o limite de envios usa o caminho antigo, que deixa passar tentativas **simultâneas** acima do limite |
 
 `npm run check:launch:online` diz quais faltam.
 
 ---
 
+## Limite de envios, corpo da requisição e cabeçalhos
+
+**Limite de envios** (`src/lib/rateLimit.ts`): 5 tentativas a cada 10 minutos
+por pessoa. Contar e registrar acontecem numa transação só, dentro do banco
+(função `registrar_tentativa`, migração 0005), então chamadas simultâneas não
+furam o limite.
+
+- **Quando o limitador falha, ele falha ABERTO** (a pessoa passa) e registra a
+  categoria no log. É uma decisão: derrubar um cadastro legítimo porque o
+  contador quebrou é pior do que deixar passar algumas tentativas numa falha.
+- Por isso ele **não deve ser a única defesa**. Ative a proteção de borda da
+  hospedagem (na Vercel: Firewall, com proteção contra bots ou regra de taxa
+  para `/api/leads`). Isso é configuração de conta, não de código.
+- A pessoa é identificada por um hash diário do IP. É pseudonimização, não
+  anonimato. Defina `RATE_LIMIT_PEPPER` (texto longo e aleatório) em produção.
+- O IP vem dos cabeçalhos escritos pela borda da Vercel. Atrás de outro proxy,
+  confira qual cabeçalho é confiável antes de usar.
+
+**Corpo da requisição** (`src/lib/corpo.ts`): teto de 20.000 **bytes**, lido aos
+pedaços e interrompido assim que passa do teto — com `Content-Length` ausente,
+falso, ou texto de vários bytes por caractere.
+
+**Cabeçalhos de defesa** (`next.config.ts`): a página não pode ser embutida em
+outro site, além de `nosniff`, `Referrer-Policy`, `Permissions-Policy` e HSTS.
+Ficou de fora, de propósito, restringir a origem de scripts na CSP: o Next
+injeta scripts inline e isso exige nonce por requisição (a página deixaria de
+ser estática) e teste com a medição ligada.
+
+## Pendências que dependem de decisão ou de acesso externo
+
+- **E-mail obrigatório.** O contato principal é o WhatsApp, e tornar o e-mail
+  opcional reduziria atrito. Não foi feito porque a mudança precisa ser inteira:
+  a coluna é `email text not null`, o aviso usa `reply_to`, o comparador de
+  idempotência e o CRM esperam texto. Sem revisar o CRM junto, o e-mail segue
+  obrigatório — e a política de privacidade diz isso.
+- **Domínio antigo.** `rumo-lp.vercel.app` ainda responde. O oficial é
+  `zxp-direciona.vercel.app` (canonical, OG e sitemap). Redirecionar o antigo
+  é configuração na Vercel (Domains), não foi alterado por código.
+- **Medição.** O código garante consentimento e um único dono das tags (GTM
+  **ou** integração direta). Não garante que toda tag criada dentro do
+  contêiner do GTM respeite o consentimento: isso se valida na conta.
+- **Proteção de borda** e **`RATE_LIMIT_PEPPER`**: ver a seção acima.
+
 ## Testes
 
 ```bash
-npm test
+npm test          # type-check + suíte (os testes de HTML exigem um build antes)
+npm run test:ci   # lint + build + suíte: é assim que roda na integração contínua
 ```
+
+Com a variável `CI` definida, os testes de HTML **falham** se não houver build —
+em vez de serem pulados em silêncio.
 
 Faz o type-check dos testes (`tsconfig.test.json`) e roda a suíte com o test
 runner **nativo do Node** — nenhuma dependência nova. Os testes executam o
@@ -276,9 +348,20 @@ O que cobrem, e por quê esses:
 - **Consentimento e medição** — nada carrega antes do "sim", ordem do Consent
   Mode, granularidade, revogação, recibo contado uma vez, nenhum dado pessoal
   nos eventos, ID malformado ignorado.
-- **HTML gerado pelo build** — âncoras que apontam pra ids reais, sem
-  placeholder, um `<h1>`, todo campo com `<label>`, nenhum terceiro no build
-  padrão. (Pulado, com o motivo à vista, se não houver `npm run build` antes.)
+- **Relato obrigatório** — vazio, só espaços, abaixo do mínimo, limites exatos,
+  acima do máximo, acentos, e envio direto à API sem o campo.
+- **Limite de envios** — 8 envios simultâneos deixam passar exatamente 5; HTTP
+  500 e resposta malformada da função; função ausente; contagem com erro.
+- **Corpo** — teto em bytes com texto acentuado, envio em pedaços sem
+  `Content-Length` (a leitura para), `Content-Length` mentindo, UTF-8 inválido.
+- **Consentimento entre abas** — recusa ou limpeza em outra aba vale nesta;
+  nada é reenviado depois de um aceite.
+- **WhatsApp** — número de `site.ts`, mensagem fixa codificada, nada do que a
+  pessoa digitou na URL, e o botão de sucesso fora do HTML inicial.
+- **HTML e bundles gerados pelo build** — a ordem das seções; **método,
+  entregas e condições comerciais ausentes do HTML, do payload RSC e de todos
+  os arquivos de `.next/static`**; voz em primeira pessoa; domínio oficial no
+  canonical e no `og:url`; campos com `required`; sem placeholder; um `<h1>`.
 
 Foram validados por **mutação**: reintroduzir o bug do +55, o aviso que só saía
 na 1ª gravação, o log do corpo bruto do banco e a aceitação de dados diferentes

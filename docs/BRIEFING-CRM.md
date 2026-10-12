@@ -1,5 +1,23 @@
 # Briefing — micro-CRM da ZXP Direciona (Fase 2)
 
+> **Leia antes (atualizado em 12/10/2026).** Este documento nasceu como
+> briefing pra criar o CRM e guarda histórico. Onde ele divergir do código,
+> vale o código. O que mudou desde então e interessa ao CRM:
+>
+> - **`contexto` agora é obrigatório em cadastro novo** (60 a 1.500 caracteres),
+>   mas a coluna continua aceitando `NULL`: cadastros antigos têm `contexto`
+>   vazio e devem continuar legíveis. Não preencha os antigos com texto.
+> - **`email` segue obrigatório** e `NOT NULL`. Torná-lo opcional depende de
+>   revisar este CRM junto (ver CONFIGURACAO-E-LANCAMENTO.md).
+> - Quem atende é o **Cauã, em primeira pessoa**. A página não publica método,
+>   entregas nem condições comerciais — o CRM também não deve gerar mensagens
+>   que as prometam.
+> - O visitante é orientado a chamar o Cauã no WhatsApp depois do envio. Um
+>   cadastro salvo **não** significa conversa agendada: agendamento,
+>   comparecimento e contratação precisam ser registrados aqui.
+> - Migrações até a `0005` existem; o estado real do banco se confere com
+>   `npm run check:launch:online`, não por este texto.
+
 Documento de contexto para quem vai construir o painel de leads. Leia inteiro
 antes de escrever código.
 

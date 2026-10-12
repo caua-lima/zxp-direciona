@@ -13,6 +13,12 @@ import { dadosPrivacidade, site } from "@/config/site";
  */
 const caminho = path.join(process.cwd(), ".next", "server", "app", "index.html");
 const existe = existsSync(caminho);
+// Na máquina de quem desenvolve, sem build os testes são pulados com o
+// motivo à vista. Na integração contínua (variável CI) isso seria um buraco
+// silencioso: lá a falta do build é FALHA.
+if (!existe && process.env.CI) {
+  throw new Error("CI sem build: rode `npm run build` antes dos testes (use `npm run test:ci`).");
+}
 const opcoes = existe ? {} : { skip: "rode `npm run build` antes (não há .next/server/app/index.html)" };
 const html = existe ? readFileSync(caminho, "utf8") : "";
 

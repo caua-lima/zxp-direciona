@@ -1,0 +1,26 @@
+name: CI
+
+# Roda em todo push e em todo pull request. Só lint, build e testes: não faz
+# deploy, não toca no banco e não envia e-mail (Supabase e Resend são
+# simulados nos testes).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # lint + build + testes. Com CI definido, os testes de HTML falham se
+      # não houver build, em vez de serem pulados.
+      - run: npm run test:ci

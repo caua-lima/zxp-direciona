@@ -1,21 +1,26 @@
 # ZXP Direciona — Landing page de captação
 
-LP da **ZXP Direciona**, mentoria de direção profissional da ZXP Solutions.
-Renomeada em 2026-09-13 (antigo nome: RUMO).
+Landing page da **ZXP Direciona**, mentoria de direção profissional da ZXP
+Solutions, conduzida por Cauã Lima. Publicada em
+https://zxp-direciona.vercel.app.
 
-O objetivo da página é captar inscrições para a **call de diagnóstico** — não é
-página de venda. O fechamento acontece na conversa, e por isso o preço não
-aparece aqui.
+**O que a página faz:** explica para quem é, quem conversa (o Cauã), qual é o
+próximo passo, e capta o contexto da pessoa. O fluxo é um só:
+
+`CTA → formulário com relato obrigatório → gravação confirmada → botão que abre o WhatsApp do Cauã → eles combinam a call`
+
+**O que a página NÃO publica, por decisão do dono** (e os testes barram se
+voltar):
+
+- o método da mentoria — nome, sigla, etapas, lógica. É apresentado só na call;
+- entregas, frequência, suporte, duração, prazo de resposta;
+- preço, forma de pagamento, parcelamento, vagas;
+- depoimentos, números ou credenciais que ninguém confirmou.
+
+Pode dizer, e diz: a conversa inicial é gratuita; a mentoria é paga e é
+apresentada na call.
 
 Stack: Next.js 16 (App Router) · TypeScript · Tailwind v4 · Supabase.
-
-> O aviso que esteve aqui (projeto Supabase pausado, captação fora do ar) foi
-> resolvido em 18/09/2026 — o Cauã reativou o projeto no dashboard. Testado
-> de ponta a ponta contra o banco real: cadastro grava, idempotência não
-> duplica em retry (3 tentativas com a mesma chave → 1 linha só), rate limit
-> barra na 6ª tentativa em 10 min. `RESEND_API_KEY` segue vazia em
-> `.env.local` — o aviso por e-mail está desligado até isso ser preenchido
-> (o cadastro em si não depende disso).
 
 ---
 
@@ -28,7 +33,8 @@ npm run dev
 
 Abre em http://localhost:3000.
 
-Outros comandos: `npm test` (testes, sem dependência nova), `npm run check:launch` /
+Outros comandos: `npm test` (testes, sem dependência nova), `npm run test:ci` (lint, build e
+testes, como roda na integração contínua), `npm run check:launch` /
 `check:launch:online` (o que falta antes de anunciar) e
 `npm run notificacoes:reprocessar` (reenvia avisos que não saíram).
 
@@ -36,18 +42,15 @@ Outros comandos: `npm test` (testes, sem dependência nova), `npm run check:laun
 
 | O quê | Arquivo |
 | --- | --- |
-| Marca, URL pública, WhatsApp comercial, privacidade | `src/config/site.ts` |
-| Nome e textos do plano | `src/config/plano.ts` |
-| Bio de quem conduz a mentoria | `src/config/mentor.ts` |
-| Regras de validação do lead | `src/lib/lead.ts` |
+| Marca, URL pública, WhatsApp do Cauã, privacidade | `src/config/site.ts` |
+| Quem conduz: nome, foto, apresentação | `src/config/mentor.ts` |
+| Regras de validação do lead (inclusive o relato) | `src/lib/lead.ts` |
+| Link e mensagem do WhatsApp | `src/lib/contato.ts` |
 | Seções da página | `src/components/` |
 
-> ⚠️ `src/config/mentor.ts` e partes de `src/config/site.ts` ainda estão com
-> **placeholders**. Nenhum número, resultado ou depoimento foi inventado —
-> preencha com os dados reais antes de divulgar a página. Rode
-> `npm run check:launch` (ou `check:launch:online`, que também consulta o banco e o
-> site publicado) pra ver exatamente o que falta (ver
-> [`docs/CONFIGURACAO-E-LANCAMENTO.md`](docs/CONFIGURACAO-E-LANCAMENTO.md)).
+> Rode `npm run check:launch` (ou `check:launch:online`, que também consulta
+> o banco e o site publicado) pra ver o que falta antes de anunciar — ver
+> [`docs/CONFIGURACAO-E-LANCAMENTO.md`](docs/CONFIGURACAO-E-LANCAMENTO.md).
 
 ---
 

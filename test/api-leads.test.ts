@@ -93,7 +93,10 @@ describe("portões de entrada", () => {
     const pedaco = new TextEncoder().encode("x".repeat(8_000));
     const fluxo = new ReadableStream<Uint8Array>({
       pull(controle) {
-        // Fonte sem fim: se a rota tentasse ler tudo, o teste nunca acabaria.
+        // 400 KB no total, 20 vezes o teto. Finita de propósito: se a rota
+        // tentasse ler tudo, o teste falharia pela contagem abaixo, sem
+        // deixar um fluxo eterno pendurado no processo de teste.
+        if (enviados >= 50) return controle.close();
         enviados++;
         controle.enqueue(pedaco);
       },
