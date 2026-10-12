@@ -28,6 +28,10 @@ export const EVENTO_ABRIR_PREFERENCIAS = "zxp:abrir-preferencias";
 // Espelho em memória: se o localStorage estiver bloqueado (aba anônima,
 // política do navegador), a escolha ainda vale pra esta sessão em vez de o
 // banner reabrir a cada clique.
+//
+// Ele NÃO pode encobrir uma escolha mais nova feita em outra aba: quando o
+// navegador avisa (evento `storage`), o espelho é substituído pelo valor
+// novo antes de qualquer leitura — ver assinarConsentimento.
 let memoria: string | null = null;
 
 /** Snapshot bruto (string) — estável entre leituras, como o React exige. "" =
@@ -42,12 +46,24 @@ export function lerBrutoConsentimento(): string {
 }
 
 export function assinarConsentimento(aoMudar: () => void): () => void {
+  // Outra aba mudou (ou apagou) a escolha. O evento `storage` só dispara nas
+  // OUTRAS abas, nunca na que gravou — então aqui o valor que chega é sempre
+  // mais novo que o espelho desta aba, e passa a valer no lugar dele. Sem
+  // isso a aba continuava lendo a escolha antiga e medindo depois de uma
+  // recusa feita ao lado.
+  const aoMudarEmOutraAba = (evento: Event) => {
+    const { key, newValue } = evento as StorageEvent;
+    // key === null: o armazenamento inteiro foi limpo.
+    if (key !== null && key !== undefined && key !== CHAVE) return;
+    memoria = key === CHAVE ? (newValue ?? "") : "";
+    aoMudar();
+  };
+
   window.addEventListener(EVENTO_MUDOU, aoMudar);
-  // Outra aba mudou a escolha.
-  window.addEventListener("storage", aoMudar);
+  window.addEventListener("storage", aoMudarEmOutraAba);
   return () => {
     window.removeEventListener(EVENTO_MUDOU, aoMudar);
-    window.removeEventListener("storage", aoMudar);
+    window.removeEventListener("storage", aoMudarEmOutraAba);
   };
 }
 

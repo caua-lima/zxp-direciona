@@ -5,7 +5,7 @@
  * a lógica REAL de src/lib/tracking sem jsdom nem navegador.
  */
 
-type Ouvinte = () => void;
+type Ouvinte = (evento: { type: string }) => void;
 
 export function instalarNavegador(opcoes: { storageBloqueado?: boolean } = {}) {
   const g = globalThis as Record<string, unknown>;
@@ -32,7 +32,7 @@ export function instalarNavegador(opcoes: { storageBloqueado?: boolean } = {}) {
       ouvintes.get(tipo)?.delete(fn);
     },
     dispatchEvent(evento: { type: string }) {
-      ouvintes.get(evento.type)?.forEach((fn) => fn());
+      ouvintes.get(evento.type)?.forEach((fn) => fn(evento));
       return true;
     },
   };

@@ -10,7 +10,7 @@ import {
   salvarConsentimento,
   type Consentimento,
 } from "@/lib/tracking/consent";
-import { aplicarConsentimento } from "@/lib/tracking/providers";
+import { aplicarConsentimento, revogarTudo } from "@/lib/tracking/providers";
 import {
   ORIGENS_WHATSAPP,
   POSICOES_CTA,
@@ -46,7 +46,10 @@ export function TrackingProvider() {
 
   useEffect(() => {
     if (consentimento) aplicarConsentimento(consentimento);
-  }, [consentimento]);
+    // Já hidratou e não há escolha válida (apagada, inclusive por outra aba):
+    // desliga o que estiver ligado em vez de continuar com a escolha antiga.
+    else if (bruto !== null) revogarTudo();
+  }, [consentimento, bruto]);
 
   useEffect(() => {
     if (!trackingAtivo) return;

@@ -226,6 +226,96 @@ describe("revogar o consentimento", () => {
   });
 });
 
+describe("consentimento mudou em OUTRA aba", () => {
+  const CHAVE = "zxp_consentimento";
+  // O que a outra aba faz: grava no localStorage, e o navegador avisa esta.
+  const outraAbaGrava = (valor: string | null) => {
+    if (valor === null) navegador.armazenamento.delete(CHAVE);
+    else navegador.armazenamento.set(CHAVE, valor);
+    (janela.dispatchEvent as (e: unknown) => void)({ type: "storage", key: CHAVE, newValue: valor });
+  };
+  // O que o TrackingProvider faz a cada mudança do store.
+  const sincronizar = () => {
+    const c = consent.interpretarConsentimento(consent.lerBrutoConsentimento());
+    if (c) providers.aplicarConsentimento(c);
+    else providers.revogarTudo();
+    return c;
+  };
+
+  test("esta aba aceitou; a outra recusou → esta para de ler a escolha antiga e revoga", () => {
+    let avisos = 0;
+    const cancelar = consent.assinarConsentimento(() => avisos++);
+    try {
+      consent.salvarConsentimento(true, true);
+      sincronizar();
+      assert.equal(providers.consentimentoVigente()?.marketing, true);
+
+      outraAbaGrava(JSON.stringify(consentimento(false, false)));
+
+      assert.ok(avisos >= 2, "o store precisa avisar quem está assinando");
+      // Era aqui o defeito: a memória da aba devolvia marketing=true.
+      const lido = consent.interpretarConsentimento(consent.lerBrutoConsentimento());
+      assert.deepEqual([lido?.analytics, lido?.marketing], [false, false]);
+
+      sincronizar();
+      assert.equal(janela["ga-disable-G-TESTE1234"], true);
+      assert.deepEqual(fbqFila().at(-1)?.slice(0, 2), ["consent", "revoke"]);
+
+      const antesDl = dl().length;
+      const antesFbq = fbqFila().length;
+      events.track({ nome: "cta_click", posicao: "hero" });
+      events.track({ nome: "generate_lead", recibo: "rec-apos-recusa-em-outra-aba" });
+      assert.equal(dl().length, antesDl, "evento saiu depois da recusa feita em outra aba");
+      assert.equal(fbqFila().length, antesFbq);
+    } finally {
+      cancelar();
+    }
+  });
+
+  test("a outra aba APAGOU a escolha → nada de escolha antiga: tudo desligado até escolher de novo", () => {
+    const cancelar = consent.assinarConsentimento(() => {});
+    try {
+      consent.salvarConsentimento(true, true);
+      sincronizar();
+      outraAbaGrava(null);
+      assert.equal(sincronizar(), null);
+      assert.equal(providers.consentimentoVigente(), null);
+
+      const antes = dl().length;
+      events.track({ nome: "cta_click", posicao: "hero" });
+      assert.equal(dl().length, antes);
+    } finally {
+      cancelar();
+    }
+  });
+
+  test("mudança em outra chave do localStorage não mexe na escolha desta aba", () => {
+    const cancelar = consent.assinarConsentimento(() => {});
+    try {
+      consent.salvarConsentimento(true, false);
+      (janela.dispatchEvent as (e: unknown) => void)({ type: "storage", key: "outra_coisa", newValue: "x" });
+      assert.equal(consent.interpretarConsentimento(consent.lerBrutoConsentimento())?.analytics, true);
+    } finally {
+      cancelar();
+    }
+  });
+
+  test("aceitar depois de recusar não reenvia o que foi descartado antes", () => {
+    const cancelar = consent.assinarConsentimento(() => {});
+    try {
+      outraAbaGrava(JSON.stringify(consentimento(false, false)));
+      sincronizar();
+      events.track({ nome: "generate_lead", recibo: "rec-durante-recusa" });
+      const antes = eventosDoDataLayer().length;
+      outraAbaGrava(JSON.stringify(consentimento(true, true)));
+      sincronizar();
+      assert.equal(eventosDoDataLayer().length, antes, "evento antigo reenviado depois do aceite");
+    } finally {
+      cancelar();
+    }
+  });
+});
+
 describe("falha de fornecedor nunca chega no site", () => {
   test("gtag quebrado: track() não lança", () => {
     const original = janela.gtag;

@@ -166,6 +166,22 @@ function revogarMeta() {
   window.fbq?.("consent", "revoke");
 }
 
+/**
+ * Não há escolha vigente (foi apagada, ou é de uma versão antiga do aviso):
+ * tudo que estiver carregado é desligado e nenhum evento sai até uma escolha
+ * nova. Nada é carregado por esta função.
+ */
+export function revogarTudo() {
+  consentimentoAtual = null;
+  try {
+    if (tracking.gtm) revogarGtm();
+    if (tracking.ga4) revogarGa4(tracking.ga4);
+    if (tracking.metaPixel) revogarMeta();
+  } catch (erro) {
+    console.warn("[tracking] falha ao revogar:", erro);
+  }
+}
+
 /** Aplica a escolha do visitante: carrega o que foi aceito, desliga o que foi
  * recusado/revogado. Idempotente — pode ser chamada de novo a cada mudança. */
 export function aplicarConsentimento(c: Consentimento) {
