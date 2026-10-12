@@ -7,7 +7,7 @@
  */
 export const mentor = {
   name: "Cauã Lima",
-  role: "À frente da ZXP Direciona",
+  role: "Fundador da ZXP Solutions",
 
   /** Caminho da foto em /public. Com null, a seção mostra um placeholder. */
   photoUrl: "/mentor.jpg" as string | null,
