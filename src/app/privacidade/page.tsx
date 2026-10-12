@@ -14,7 +14,7 @@ import { tracking, trackingAtivo } from "@/config/tracking";
  * Mude este texto no mesmo commit e atualize `ATUALIZADA_EM`. Nada de
  * "conformidade total" nem promessa que ninguém verificou.
  */
-const ATUALIZADA_EM = "11 de outubro de 2026";
+const ATUALIZADA_EM = "12 de outubro de 2026";
 
 export const metadata: Metadata = {
   title: `Privacidade — ${site.nome}`,
@@ -95,12 +95,16 @@ export default function Privacidade() {
         </Bloco>
 
         <Bloco titulo="Quais dados coletamos">
-          <p>Só o que você preenche no formulário:</p>
+          <p>Só o que você preenche no formulário, e todos os campos são obrigatórios:</p>
           <ul className="flex list-disc flex-col gap-1.5 pl-5">
             <li>nome, número de WhatsApp e e-mail;</li>
             <li>faixa de idade;</li>
             <li>o que mais pesa hoje, entre as opções da lista;</li>
-            <li>o relato que você escreve sobre o seu caso;</li>
+            <li>
+              o relato sobre o seu momento, de 60 a 1.500 caracteres. Não inclua
+              nele documentos, senhas, informações de saúde ou dados de outras
+              pessoas;
+            </li>
             <li>a data e a hora em que você autorizou o contato.</li>
           </ul>
           <p>
@@ -118,17 +122,26 @@ export default function Privacidade() {
 
         <Bloco titulo="Para que usamos">
           <p>
-            Para entrar em contato com você, por WhatsApp ou e-mail, e combinar
-            a conversa inicial. Fazemos isso com base na autorização que você
-            marca no formulário. Não há decisão automatizada sobre você.
+            Para que eu, Cauã Lima, leia o seu contexto antes de conversarmos e
+            possa falar com você, por WhatsApp ou e-mail, sobre a conversa
+            inicial. Isso é feito com base na autorização que você marca no
+            formulário. Não há decisão automatizada sobre você, e o relato não
+            é avaliado nem pontuado por programa nenhum.
+          </p>
+          <p>
+            Enviar o formulário não agenda a conversa. Depois do envio, a página
+            oferece um botão que abre o WhatsApp com uma mensagem pronta; ela só
+            é enviada se você confirmar, e a partir daí a conversa acontece no
+            WhatsApp, que tem a sua própria política de privacidade.
           </p>
         </Bloco>
 
         <Bloco titulo="Quem tem 16 ou 17 anos">
           <p>
-            Pedimos uma confirmação a mais: que um responsável esteja ciente do
-            cadastro e de acordo com o contato. O formulário não é destinado a
-            menores de 16 anos.
+            O formulário pede uma declaração a mais, feita por você: a de que um
+            responsável está ciente do cadastro e de acordo com o contato. Ela
+            não é uma verificação da identidade do responsável. O formulário não
+            é destinado a menores de 16 anos.
           </p>
         </Bloco>
 
@@ -141,7 +154,7 @@ export default function Privacidade() {
             <li>Supabase, o banco de dados onde o cadastro é guardado;</li>
             <li>Vercel, a hospedagem do site;</li>
             <li>
-              Resend, serviço de e-mail usado para avisar a equipe de um novo
+              Resend, serviço de e-mail usado para me avisar de um novo
               cadastro. O relato que você escreve não vai nesse e-mail.
             </li>
           </ul>
@@ -176,8 +189,8 @@ export default function Privacidade() {
 
         <Bloco titulo="Por quanto tempo">
           <p>
-            Guardamos o seu cadastro enquanto o contato com você estiver em
-            andamento ou até você pedir a exclusão.
+            Não há um prazo fixo de guarda definido. Você pode pedir a exclusão
+            do seu cadastro a qualquer momento, pelo contato acima.
           </p>
         </Bloco>
 
