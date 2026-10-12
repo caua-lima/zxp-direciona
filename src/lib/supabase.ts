@@ -47,24 +47,28 @@ export async function supabaseFetch(
 }
 
 /**
- * Resumo de uma resposta de erro SEGURO pra log: status + `code` + `message`
- * do PostgREST, e nada mais.
+ * Resumo de uma resposta de erro SEGURO pra log: status HTTP + o `code` do
+ * PostgREST/Postgres (ex.: "23502", "PGRST204"), e nada mais.
  *
- * Por que não o corpo inteiro: o Postgres inclui `details` nos erros de
- * constraint, e ali vem "Failing row contains (...)" ou "Key (...)=(...)" com
- * os valores da linha — nome, telefone, e-mail do lead. Um log de erro que
- * copia o corpo bruto espalha dado pessoal (de adolescentes, aqui) pra um
- * lugar que ninguém pensou em proteger.
+ * Por que não o corpo: `details` traz "Failing row contains (...)" com os
+ * valores da linha — nome, telefone, e-mail do lead. E `message` também
+ * não é confiável: erros de tipo e de conversão citam o valor recebido
+ * ("invalid input syntax for type ...: \"<o que a pessoa digitou>\""). O
+ * código é uma categoria fixa; com ele e o `ref` da requisição dá pra achar
+ * a causa na documentação sem espalhar dado pessoal (de adolescentes, aqui)
+ * por um log que ninguém pensou em proteger.
  */
 export async function resumoDoErro(resposta: Response): Promise<string> {
   let code = "";
-  let message = "";
   try {
-    const corpo = (await resposta.json()) as { code?: unknown; message?: unknown };
-    if (typeof corpo.code === "string") code = corpo.code.slice(0, 40);
-    if (typeof corpo.message === "string") message = corpo.message.slice(0, 160);
+    const corpo = (await resposta.json()) as { code?: unknown };
+    // Só o formato de código (letras e dígitos): um "code" fora disso não é
+    // um código, é texto livre, e não vai pro log.
+    if (typeof corpo.code === "string" && /^[A-Za-z0-9]{2,12}$/.test(corpo.code)) {
+      code = corpo.code;
+    }
   } catch {
     // corpo que não é JSON: só o status.
   }
-  return [`HTTP ${resposta.status}`, code, message].filter(Boolean).join(" · ");
+  return [`HTTP ${resposta.status}`, code].filter(Boolean).join(" · ");
 }

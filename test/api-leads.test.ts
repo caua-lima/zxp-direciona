@@ -380,6 +380,18 @@ describe("notificação por e-mail", () => {
     assert.match(html, /contexto pessoal/);
   });
 
+  test("o link do aviso abre a conversa em nome do Cauã, só com o primeiro nome", async () => {
+    await enviar({ ...leadBase, idempotencyKey: chave() });
+    await esperarTarefasAposResposta();
+    const html = String(s.emails[0].corpo.html).replaceAll("&amp;", "&");
+    const link = new URL(html.match(/href="(https:\/\/wa\.me\/[^"]+)"/)![1]);
+    const texto = link.searchParams.get("text")!;
+    assert.match(texto, /^Oi, Fulana! Aqui é o Cauã, da ZXP Direciona\./);
+    assert.ok(!texto.includes("Sobrenomeraro"), "sobrenome na URL");
+    assert.ok(!texto.includes("texto-livre") && !texto.includes("@"), "relato ou e-mail na URL");
+    assert.ok(!/diagnóstico|a gente|nossa equipe/i.test(texto), "voz antiga na mensagem");
+  });
+
   test("nome hostil não injeta HTML no e-mail", async () => {
     await enviar({ ...leadBase, nome: '<img src=x onerror="alert(1)">', idempotencyKey: chave() });
     await esperarTarefasAposResposta();
@@ -540,6 +552,9 @@ describe("falhas do banco", () => {
 
     const log = s.logs.join("\n");
     assert.match(log, /23502/, "o código do erro é útil e seguro");
+    // A `message` do banco também pode citar o valor recebido: só o código vai.
+    assert.ok(!log.includes("violates not-null"), "mensagem do banco no log");
+    assert.ok(!log.includes("Failing row"), "details do banco no log");
     assert.match(log, new RegExp(corpo.ref), "o mesmo ref está na resposta e no log");
     // O Postgres pôs os valores da linha em `details`. Isso não pode ir pro log:
     semPII(s.logs);

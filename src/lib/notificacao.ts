@@ -125,10 +125,10 @@ export async function notificarLead(filtro: FiltroLead): Promise<ResultadoNotifi
 async function enviarEmail(linha: LinhaCompleta): Promise<void> {
   const chave = process.env.RESEND_API_KEY!;
 
-  // Link que abre a conversa já endereçada: é o que faz você responder rápido.
-  const saudacao = encodeURIComponent(
-    `Oi, ${linha.nome.split(" ")[0]}! Aqui é da ZXP Direciona. Vi seu cadastro e quero marcar sua call de diagnóstico.`,
-  );
+  // Link que abre a conversa já endereçada, em nome do Cauã: é o que faz a
+  // resposta sair rápido. Só o primeiro nome entra na URL — nada do relato.
+  // O link apenas ABRE a conversa; quem envia a mensagem é ele.
+  const saudacao = encodeURIComponent(mensagemInicial(linha.nome));
   const linkWhatsapp = `https://wa.me/${whatsappInternacional(linha.whatsapp)}?text=${saudacao}`;
 
   const resposta = await fetch("https://api.resend.com/emails", {
@@ -162,6 +162,12 @@ async function enviarEmail(linha: LinhaCompleta): Promise<void> {
   }
 }
 
+/** Primeira mensagem do Cauã pra pessoa, pronta no link do aviso. */
+export function mensagemInicial(nome: string): string {
+  const primeiroNome = nome.trim().split(/ +/)[0] ?? "";
+  return `Oi, ${primeiroNome}! Aqui é o Cauã, da ZXP Direciona. Recebi o seu contexto pelo site e quero combinar a nossa conversa inicial.`;
+}
+
 export function montarHtml(linha: LinhaCompleta, linkWhatsapp: string): string {
   const origem = [linha.utm_source, linha.utm_medium, linha.utm_campaign, linha.referrer_host]
     .filter((p): p is string => Boolean(p))
@@ -178,7 +184,7 @@ export function montarHtml(linha: LinhaCompleta, linkWhatsapp: string): string {
       ${origem ? `<p style="margin:0 0 4px"><strong>Origem:</strong> ${escapar(origem)}</p>` : ""}
       ${
         linha.contexto
-          ? `<p style="margin:16px 0 4px;color:#555"><em>A pessoa escreveu um contexto pessoal. Ele fica só no banco — não é copiado pro e-mail, porque e-mail é o lugar onde texto livre (de adolescentes, aqui) mais se espalha.</em></p>`
+          ? `<p style="margin:16px 0 4px;color:#555"><em>A pessoa escreveu um contexto pessoal (o relato do caso). Ele fica só no banco — não é copiado pro e-mail, porque e-mail é o lugar onde texto livre (de adolescentes, aqui) mais se espalha. Leia no CRM antes de responder.</em></p>`
           : ""
       }
       <p style="margin:24px 0 0">
