@@ -9,6 +9,10 @@ import {
   ehMenorDeIdade,
   faixasIdade,
   leadVazio,
+  tamanhoDoRelato,
+  CONTEXTO_MINIMO,
+  CONTEXTO_MAXIMO,
+  MENSAGENS_CONTEXTO,
   type Lead,
 } from "@/lib/lead";
 
@@ -18,7 +22,7 @@ const leadValido: Lead = {
   email: "fulana@exemplo.com",
   idade: "18 a 21",
   peso: "Outro",
-  contexto: "Não sei qual curso escolher e isso me trava.",
+  contexto: "Estou terminando o ensino médio, penso em dois cursos e não sei o que considerar para escolher.",
   consentimento: true,
   confirmacaoResponsavel: false,
 };
@@ -153,17 +157,35 @@ describe("validarLead", () => {
     assert.equal(validarLead({ ...leadValido, nome: "x".repeat(120) }).nome, undefined);
   });
 
-  test("contexto: obrigatório, com pelo menos uma frase curta", () => {
-    assert.ok(validarLead({ ...leadValido, contexto: "" }).contexto);
-    assert.ok(validarLead({ ...leadValido, contexto: "      " }).contexto);
-    assert.ok(validarLead({ ...leadValido, contexto: "oi" }).contexto);
-    assert.ok(validarLead({ ...leadValido, contexto: "x".repeat(19) }).contexto);
-    assert.equal(validarLead({ ...leadValido, contexto: "x".repeat(20) }).contexto, undefined);
+  const relato = (contexto: string) => validarLead({ ...leadValido, contexto }).contexto;
+
+  test("contexto vazio ou só com espaços: mensagem de 'vazio'", () => {
+    assert.equal(relato(""), MENSAGENS_CONTEXTO.vazio);
+    assert.equal(relato("      "), MENSAGENS_CONTEXTO.vazio);
+    assert.equal(relato(" 	 "), MENSAGENS_CONTEXTO.vazio);
   });
 
-  test("contexto: até 400 caracteres", () => {
-    assert.equal(validarLead({ ...leadValido, contexto: "x".repeat(400) }).contexto, undefined);
-    assert.ok(validarLead({ ...leadValido, contexto: "x".repeat(401) }).contexto);
+  test("contexto abaixo do mínimo: mensagem de 'curto', nos limites exatos", () => {
+    assert.equal(relato("oi"), MENSAGENS_CONTEXTO.curto);
+    assert.equal(relato("x".repeat(CONTEXTO_MINIMO - 1)), MENSAGENS_CONTEXTO.curto);
+    assert.equal(relato("x".repeat(CONTEXTO_MINIMO)), undefined);
+  });
+
+  test("espaço nas pontas não conta como conteúdo", () => {
+    assert.equal(relato(" ".repeat(40) + "x".repeat(CONTEXTO_MINIMO - 1) + " ".repeat(40)), MENSAGENS_CONTEXTO.curto);
+    assert.equal(relato("  " + "x".repeat(CONTEXTO_MAXIMO) + "  "), undefined);
+  });
+
+  test("contexto acima do máximo: mensagem de 'longo', nos limites exatos", () => {
+    assert.equal(relato("x".repeat(CONTEXTO_MAXIMO)), undefined);
+    assert.equal(relato("x".repeat(CONTEXTO_MAXIMO + 1)), MENSAGENS_CONTEXTO.longo);
+  });
+
+  test("contexto com acento e emoji conta do mesmo jeito que o contador da tela", () => {
+    const acentuado = "ç".repeat(CONTEXTO_MINIMO);
+    assert.equal(tamanhoDoRelato(acentuado), CONTEXTO_MINIMO);
+    assert.equal(relato(acentuado), undefined);
+    assert.equal(relato("é".repeat(CONTEXTO_MAXIMO + 1)), MENSAGENS_CONTEXTO.longo);
   });
 
   test("valores fora da lista permitida são rejeitados (não dá pra injetar via curl)", () => {

@@ -24,9 +24,10 @@ export const runtime = "nodejs";
 // Nunca cachear: cada POST é único e precisa chegar no banco.
 export const dynamic = "force-dynamic";
 
-// Generoso pro maior payload plausível (nome+whatsapp+email+contexto de 400
-// chars + folga), mas fecha a porta pra alguém mandar um corpo de megabytes
-// só pra gastar CPU/memória da função.
+// Generoso pro maior payload plausível (o relato vai até 1.500 caracteres,
+// que em UTF-8 podem passar de 4.500 bytes, mais os outros campos e folga),
+// mas fecha a porta pra alguém mandar um corpo de megabytes só pra gastar
+// CPU/memória da função.
 const TAMANHO_MAXIMO_BODY = 20_000; // bytes
 
 /** Nome do erro + código de rede, sem a mensagem (que pode citar dados). */

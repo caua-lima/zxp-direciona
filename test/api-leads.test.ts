@@ -15,7 +15,8 @@ const { POST } = await import("@/app/api/leads/route");
 // achar qualquer vazamento sem falso positivo.
 const NOME = "Fulana Sobrenomeraro";
 const EMAIL = "fulana.rara@exemplo.com";
-const CONTEXTO = "texto-livre-muito-pessoal-xyz";
+const CONTEXTO =
+  "texto-livre-muito-pessoal-xyz: estou em dúvida entre dois cursos e não sei como decidir.";
 const leadBase = {
   nome: NOME,
   whatsapp: "(11) 91234-5678",
@@ -101,6 +102,32 @@ describe("validação", () => {
     assert.ok((await r.json()).erros.whatsapp);
     assert.equal(s.insercoes.length, 0);
     assert.equal(s.emails.length, 0);
+  });
+
+  test("relato ausente, vazio, só espaços ou curto → 422 direto na API, sem gravar", async () => {
+    const semRelato: Record<string, unknown> = { ...leadBase };
+    delete semRelato.contexto;
+    for (const corpo of [
+      semRelato,
+      { ...leadBase, contexto: "" },
+      { ...leadBase, contexto: "     \n   " },
+      { ...leadBase, contexto: "curto demais" },
+      { ...leadBase, contexto: 12345 },
+    ]) {
+      const r = await enviar({ ...corpo, idempotencyKey: chave() });
+      assert.equal(r.status, 422);
+      assert.ok((await r.json()).erros.contexto);
+    }
+    assert.equal(s.insercoes.length, 0);
+    assert.equal(s.emails.length, 0);
+  });
+
+  test("relato longo demais → 422; no limite exato e com acentos → grava", async () => {
+    const longo = await enviar({ ...leadBase, contexto: "é".repeat(1501), idempotencyKey: chave() });
+    assert.equal(longo.status, 422);
+    const limite = await enviar({ ...leadBase, contexto: "é".repeat(1500), idempotencyKey: chave() });
+    assert.equal(limite.status, 200);
+    assert.equal(String(s.insercoes[0].contexto).length, 1500);
   });
 
   test("menor de idade sem confirmação do responsável → 422 (o servidor também barra)", async () => {

@@ -102,17 +102,32 @@ export function whatsappInternacional(valor: string) {
 }
 
 /**
- * O relato é obrigatório: quem atende lê antes de chamar a pessoa, e uma
- * conversa que começa do zero rende menos. 20 caracteres é só o bastante pra
- * barrar "oi" e "nada" sem exigir redação.
+ * O relato é obrigatório: o Cauã lê antes de conversar com a pessoa. O
+ * mínimo pede "algumas frases", não uma redação; é uma escolha inicial de
+ * produto, pra ajustar olhando abandono e qualidade — não um número mágico.
+ *
+ * As duas constantes e `tamanhoDoRelato` são a ÚNICA definição da regra:
+ * o contador da tela, a validação do cliente e a da API usam as três. Espaço
+ * nas pontas não conta como conteúdo.
  */
-export const CONTEXTO_MINIMO = 20;
+export const CONTEXTO_MINIMO = 60;
+export const CONTEXTO_MAXIMO = 1500;
+
+export function tamanhoDoRelato(texto: string): number {
+  return texto.trim().length;
+}
+
+export const MENSAGENS_CONTEXTO = {
+  vazio: "Conte um pouco sobre o seu momento para eu entender seu caso.",
+  curto: "Escreva um pouco mais: o que você precisa decidir e o que está dificultando?",
+  longo: "Resuma seu relato em até 1.500 caracteres.",
+} as const;
 
 export function validarLead(campos: Lead): ErrosLead {
   const erros: ErrosLead = {};
 
   if (campos.nome.trim().length < 2) {
-    erros.nome = "Escreve seu nome pra gente saber como te chamar.";
+    erros.nome = "Escreva seu nome para eu saber como te chamar.";
   } else if (campos.nome.trim().length > 120) {
     erros.nome = "Nome muito longo.";
   }
@@ -130,35 +145,38 @@ export function validarLead(campos: Lead): ErrosLead {
     new Set(nacional).size > 1;
 
   if (!formatoPlausivel) {
-    erros.whatsapp = "Coloca o WhatsApp com DDD, ex: (11) 91234-5678.";
+    erros.whatsapp = "Informe o WhatsApp com DDD, por exemplo (11) 91234-5678.";
   }
 
   const email = campos.email.trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || email.length > 200) {
-    erros.email = "Confere o e-mail — parece que faltou alguma coisa.";
+    erros.email = "Confira o e-mail: parece que faltou alguma parte.";
   }
 
   if (!faixasIdade.includes(campos.idade as (typeof faixasIdade)[number])) {
-    erros.idade = "Escolhe sua faixa de idade.";
+    erros.idade = "Escolha sua faixa de idade.";
   }
 
   if (!opcoesPeso.includes(campos.peso as (typeof opcoesPeso)[number])) {
-    erros.peso = "Escolhe a opção que mais se parece com você.";
+    erros.peso = "Escolha a opção mais parecida com o seu momento.";
   }
 
-  if (campos.contexto.trim().length < CONTEXTO_MINIMO) {
-    erros.contexto = "Conta um pouco do seu caso, em pelo menos uma frase.";
-  } else if (campos.contexto.length > 400) {
-    erros.contexto = "Tenta resumir em até 400 caracteres.";
+  const relato = tamanhoDoRelato(campos.contexto);
+  if (relato === 0) {
+    erros.contexto = MENSAGENS_CONTEXTO.vazio;
+  } else if (relato < CONTEXTO_MINIMO) {
+    erros.contexto = MENSAGENS_CONTEXTO.curto;
+  } else if (relato > CONTEXTO_MAXIMO) {
+    erros.contexto = MENSAGENS_CONTEXTO.longo;
   }
 
   if (!campos.consentimento) {
-    erros.consentimento = "Precisa autorizar o contato pra gente conversar.";
+    erros.consentimento = "Preciso da sua autorização de contato para conversarmos.";
   }
 
   if (ehMenorDeIdade(campos.idade) && !campos.confirmacaoResponsavel) {
     erros.confirmacaoResponsavel =
-      "Pra quem tem 16-17 anos, precisamos que um responsável esteja ciente.";
+      "Para quem tem 16 ou 17 anos, é preciso confirmar que um responsável está ciente.";
   }
 
   return erros;

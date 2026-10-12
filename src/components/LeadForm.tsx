@@ -10,6 +10,7 @@ import {
   validarLead,
   leadVazio,
   ehMenorDeIdade,
+  CONTEXTO_MAXIMO,
   type Lead,
   type ErrosLead,
 } from "@/lib/lead";
@@ -357,7 +358,7 @@ export function LeadForm() {
                 <textarea
                   id="contexto"
                   rows={3}
-                  maxLength={400}
+                  maxLength={CONTEXTO_MAXIMO}
                   enterKeyHint="done"
                   placeholder="Em uma ou duas frases, o que está acontecendo agora."
                   aria-required="true"
