@@ -17,11 +17,13 @@ export const site = {
   empresaMae: "ZXP Solutions",
 
   /**
-   * URL que está de fato servindo o site. Enquanto não existir domínio
-   * próprio, isto é o domínio da Vercel — real e funcional, só não é a
-   * marca final. Trocar aqui já propaga pro canonical/OG (layout.tsx).
+   * URL que está de fato servindo o site — fonte única do canonical, do OG e
+   * do sitemap. Enquanto não existir domínio próprio, é o domínio do projeto
+   * na Vercel. O endereço antigo (rumo-lp.vercel.app) ainda responde, mas não
+   * é mais o oficial: não volte pra ele. O teste do HTML gerado confere este
+   * valor contra o domínio pretendido, não só contra si mesmo.
    */
-  urlPublica: "https://rumo-lp.vercel.app",
+  urlPublica: "https://zxp-direciona.vercel.app",
 };
 
 export type ContatoComercial = {

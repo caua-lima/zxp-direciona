@@ -65,6 +65,12 @@ describe("HTML gerado pelo build", opcoes, () => {
     assert.match(html, /<html[^>]*lang="pt-BR"/);
     assert.match(html, /<title>ZXP Direciona — Mentoria de Direção Profissional<\/title>/);
     assert.ok(html.includes(`rel="canonical" href="${site.urlPublica}`), "canonical fora de sincronia com site.urlPublica");
+    // Comparar só com site.urlPublica passava mesmo com o domínio errado na
+    // config. Este é o domínio de publicação pretendido; mudou de domínio?
+    // Mude aqui de propósito.
+    assert.equal(site.urlPublica, "https://zxp-direciona.vercel.app");
+    assert.ok(html.includes('property="og:url" content="https://zxp-direciona.vercel.app'), "og:url fora do domínio de publicação");
+    assert.ok(!html.includes("rumo-lp"), "domínio antigo ainda no HTML");
     assert.match(html, /<meta name="description" content="[^"]{60,}"/);
   });
 

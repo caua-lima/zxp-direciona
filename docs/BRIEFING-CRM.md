@@ -25,9 +25,10 @@ O plano é **único** — o próprio "ZXP Direciona" (não existe Gold/Platinum 
 se deve criar níveis). Ver `src/config/plano.ts`.
 
 Stack: **Next.js 16 (App Router) · TypeScript · Tailwind v4 · Supabase**.
-Deploy na Vercel, branch `main`. A URL de produção pode continuar em
-`rumo-lp.vercel.app` (renomear o projeto na Vercel é manual, no dashboard) —
-não assuma que a URL bate com o nome atual do produto.
+Deploy na Vercel, branch `main`. A URL de produção é
+`https://zxp-direciona.vercel.app` (fonte única: `site.urlPublica` em
+`src/config/site.ts`). O endereço antigo `rumo-lp.vercel.app` ainda responde,
+mas não é mais o oficial.
 
 > ⚠️ **PRONIX é outra empresa do mesmo dono** (produtos "Pronix Performance" e
 > "Acelera"). A ZXP Direciona **não** pertence à PRONIX — o nome só *imita o
