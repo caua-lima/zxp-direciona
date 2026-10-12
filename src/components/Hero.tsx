@@ -64,13 +64,13 @@ export function Hero() {
             botão; em tela larga ocupa a coluna da direita. */}
         {mentor.photoUrl && (
           <figure className="flex items-center gap-4 lg:block">
-            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-marfim/15 lg:aspect-square lg:h-auto lg:w-full">
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-marfim/15 sm:h-36 sm:w-36 lg:aspect-square lg:h-auto lg:w-full">
               <Image
                 src={mentor.photoUrl}
                 alt={mentor.photoAlt}
                 fill
                 priority
-                sizes="(min-width: 1024px) 440px, 96px"
+                sizes="(min-width: 1024px) 440px, (min-width: 640px) 144px, 96px"
                 className="object-cover"
               />
             </div>

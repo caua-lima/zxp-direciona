@@ -83,9 +83,11 @@ Flat vector design, no shadows, no gradients.
 
 ## 3. Foto de quem conduz a mentoria (essencial — use foto REAL)
 
-Este é o slot em `src/config/mentor.ts` (`photoUrl`), exibido em
-`src/components/Authority.tsx` num quadrado de 112×112px na tela (então precisa
-de resolução bem maior que isso pra não pixelizar em telas retina).
+Este é o slot em `src/config/mentor.ts` (`photoUrl`), exibido no **hero**
+(`src/components/Hero.tsx`): quadrado de até ~445px em tela larga e compacto
+(96 a 144px) no celular e no tablet. É a única foto da página. O arquivo atual
+é `public/mentor.jpg`, 800×800 — real, só com fundo e recorte tratados; não
+amplie além disso nem troque por imagem gerada.
 
 > ⚠️ **Não gere isso com IA.** Essa seção existe pra provar que existe uma
 > pessoa real por trás da mentoria — é a seção de autoridade/confiança da
