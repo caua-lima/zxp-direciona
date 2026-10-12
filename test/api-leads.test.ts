@@ -78,6 +78,67 @@ describe("portões de entrada", () => {
     assert.ok(nenhumaChamadaAoBancoOuResend());
   });
 
+  test("teto em BYTES: texto com acento cabe em caracteres mas estoura em bytes → 413", async () => {
+    // 12.000 "é" = 12.000 caracteres (abaixo de 20.000) e 24.000 bytes (acima).
+    const corpo = JSON.stringify({ ...leadBase, lixo: "é".repeat(12_000) });
+    assert.ok(corpo.length < 20_000 && new TextEncoder().encode(corpo).byteLength > 20_000);
+    const r = await POST(requisicao(null, {}, corpo));
+    assert.equal(r.status, 413);
+    assert.ok(nenhumaChamadaAoBancoOuResend());
+  });
+
+  test("envio em pedaços, sem Content-Length: a leitura PARA ao passar do teto", async () => {
+    let enviados = 0;
+    let cancelado = false;
+    const pedaco = new TextEncoder().encode("x".repeat(8_000));
+    const fluxo = new ReadableStream<Uint8Array>({
+      pull(controle) {
+        // Fonte sem fim: se a rota tentasse ler tudo, o teste nunca acabaria.
+        enviados++;
+        controle.enqueue(pedaco);
+      },
+      cancel() {
+        cancelado = true;
+      },
+    });
+    const r = await POST(
+      new Request("http://localhost/api/leads", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-forwarded-for": "1.2.3.4" },
+        body: fluxo,
+        duplex: "half",
+      } as RequestInit),
+    );
+    assert.equal(r.status, 413);
+    assert.ok(cancelado, "a leitura deveria ter sido cancelada");
+    assert.ok(enviados <= 6, `leu pedaços demais antes de parar: ${enviados}`);
+    assert.ok(nenhumaChamadaAoBancoOuResend());
+  });
+
+  test("Content-Length mentindo pra menos não fura o teto", async () => {
+    const r = await POST(
+      requisicao(null, { "content-length": "10" }, JSON.stringify({ ...leadBase, lixo: "x".repeat(30_000) })),
+    );
+    assert.equal(r.status, 413);
+  });
+
+  test("bytes que não são UTF-8 válido → 400, sem seguir adiante", async () => {
+    const r = await POST(
+      new Request("http://localhost/api/leads", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-forwarded-for": "1.2.3.4" },
+        body: new Uint8Array([0x7b, 0x22, 0xff, 0xfe, 0x22, 0x7d]),
+      }),
+    );
+    assert.equal(r.status, 400);
+    assert.ok(nenhumaChamadaAoBancoOuResend());
+  });
+
+  test("relato no máximo, todo em caracteres de vários bytes, cabe no teto", async () => {
+    const r = await enviar({ ...leadBase, contexto: "ção ".repeat(375), idempotencyKey: chave() });
+    assert.equal(r.status, 200);
+  });
+
   test("JSON quebrado → 400", async () => {
     assert.equal((await POST(requisicao(null, {}, "isso não é json"))).status, 400);
   });

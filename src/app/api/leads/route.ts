@@ -10,6 +10,7 @@ import { supabaseFetch, supabaseConfigurado, resumoDoErro } from "@/lib/supabase
 import { verificarLimite, ipDaRequisicao } from "@/lib/rateLimit";
 import { sanitizarAtribuicao, atribuicaoParaColunas } from "@/lib/atribuicao";
 import { notificarLead } from "@/lib/notificacao";
+import { lerCorpoLimitado } from "@/lib/corpo";
 
 /**
  * Recebe o cadastro da LP: valida, grava no Supabase (de forma idempotente)
@@ -97,23 +98,19 @@ export async function POST(request: Request) {
     }
   }
 
-  // 3) Tamanho do corpo, lido como texto antes de tentar JSON.parse — um
-  // Content-Length maior que o limite já rejeita sem nem ler o corpo; sem
-  // esse header (alguns clientes omitem), o corte pelo tamanho real do texto
-  // lido cobre o caso mesmo assim.
-  const tamanhoDeclarado = Number(request.headers.get("content-length") ?? 0);
-  if (tamanhoDeclarado > TAMANHO_MAXIMO_BODY) {
-    return Response.json({ erro: "Corpo da requisição muito grande." }, { status: 413 });
-  }
-
-  const bruto = await request.text();
-  if (bruto.length > TAMANHO_MAXIMO_BODY) {
-    return Response.json({ erro: "Corpo da requisição muito grande." }, { status: 413 });
+  // 3) Corpo lido aos pedaços, com teto em BYTES e corte na hora em que o
+  // teto é ultrapassado — vale com Content-Length ausente, falso, e com
+  // texto de vários bytes por caractere (ver src/lib/corpo.ts).
+  const corpoLido = await lerCorpoLimitado(request, TAMANHO_MAXIMO_BODY);
+  if (!corpoLido.ok) {
+    return corpoLido.motivo === "grande"
+      ? Response.json({ erro: "Corpo da requisição muito grande." }, { status: 413 })
+      : Response.json({ erro: "Corpo inválido." }, { status: 400 });
   }
 
   let body: unknown;
   try {
-    body = JSON.parse(bruto);
+    body = JSON.parse(corpoLido.texto);
   } catch {
     return Response.json({ erro: "Corpo inválido." }, { status: 400 });
   }
