@@ -8,6 +8,9 @@
   --brand-dourado: #f4b942;
   --brand-dourado-claro: #ffd98a;
   --brand-marfim: #f6f3e8;
+  /* Erro tem cor própria: o dourado já é ação e destaque, e usá-lo também
+     pra erro fazia um campo reprovado parecer um campo em foco. */
+  --brand-erro: #ff9b85;
 
   --background: var(--brand-onyx);
   --foreground: var(--brand-marfim);
@@ -20,6 +23,7 @@
   --color-dourado: var(--brand-dourado);
   --color-dourado-claro: var(--brand-dourado-claro);
   --color-marfim: var(--brand-marfim);
+  --color-erro: var(--brand-erro);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 

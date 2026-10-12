@@ -86,6 +86,28 @@ describe("HTML gerado pelo build", opcoes, () => {
     }
   });
 
+  test("campos obrigatórios declaram isso pra leitor de tela, e o relato tem ajuda, limites e contador", () => {
+    for (const id of ["nome", "idade", "whatsapp", "email", "peso", "contexto", "consentimento"]) {
+      const tag = html.match(new RegExp(`<(?:input|select|textarea)[^>]*\\sid="${id}"[^>]*>`))?.[0] ?? "";
+      assert.match(tag, /\srequired(=""|\s|>)/, `#${id} sem required`);
+      assert.match(tag, /aria-required="true"/, `#${id} sem aria-required`);
+    }
+    const relato = html.match(/<textarea[^>]*\sid="contexto"[^>]*>/)?.[0] ?? "";
+    assert.match(relato, /minLength="60"|minlength="60"/);
+    assert.match(relato, /maxLength="1500"|maxlength="1500"/);
+    assert.match(relato, /aria-describedby="contexto-ajuda contexto-nota contexto-contador"/);
+    for (const id of ["contexto-ajuda", "contexto-nota", "contexto-contador"]) {
+      assert.match(html, new RegExp(`\\sid="${id}"`), `faltou #${id}`);
+    }
+  });
+
+  test("o WhatsApp de depois do envio não está no HTML inicial; só a contingência sem JS", () => {
+    assert.ok(!html.includes('data-whatsapp="sucesso"'), "botão de sucesso antes de qualquer envio");
+    const links = [...html.matchAll(/href="(https:\/\/wa\.me\/[^"]+)"/g)].map((m) => m[1]);
+    assert.equal(links.length, 1, "esperava só o link de contingência do <noscript>");
+    assert.match(html, /<noscript>[\s\S]*wa\.me[\s\S]*<\/noscript>/);
+  });
+
   test("link de pular pro conteúdo existe", () => {
     assert.match(html, /Pular para o formulário/);
   });
