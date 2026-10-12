@@ -10,6 +10,7 @@ import { esperarTarefasAposResposta } from "next/server";
 import { instalarServicos, type Opcoes, type Servicos } from "./helpers/servicos-falsos";
 
 const { POST } = await import("@/app/api/leads/route");
+const { ipDaRequisicao } = await import("@/lib/rateLimit");
 
 // ── Dados de teste — repare que são inconfundíveis, pra a varredura de log
 // achar qualquer vazamento sem falso positivo.
@@ -156,8 +157,69 @@ describe("rate limit", () => {
     montar({ hitsIniciais: 5 });
     const r = await enviar({ ...leadBase, idempotencyKey: chave() });
     assert.equal(r.status, 429);
-    assert.equal(r.headers.get("retry-after"), "600");
+    // O tempo de espera vem do banco (quanto falta pra tentativa mais antiga
+    // sair da janela), não de um valor fixo.
+    assert.equal(r.headers.get("retry-after"), "417");
     assert.equal(s.insercoes.length, 0);
+  });
+
+  test("8 envios SIMULTÂNEOS: só 5 passam (contar e registrar é uma operação só)", async () => {
+    const respostas = await Promise.all(
+      Array.from({ length: 8 }, () => enviar({ ...leadBase, idempotencyKey: chave() })),
+    );
+    const status = respostas.map((r) => r.status).sort();
+    assert.deepEqual(status, [200, 200, 200, 200, 200, 429, 429, 429]);
+    assert.equal(s.insercoes.length, 5);
+    assert.equal(s.hitsRateLimit, 5);
+  });
+
+  test("função responde 500 → falha ABERTO e registra a categoria, sem dado pessoal", async () => {
+    s.restaurar();
+    montar({ rpcStatus: 500 });
+    const r = await enviar({ ...leadBase, idempotencyKey: chave() });
+    assert.equal(r.status, 200);
+    assert.ok(s.logs.some((l) => l.includes("[rate-limit] indisponível (rpc HTTP 500)")));
+    semPII(s.logs);
+  });
+
+  test("função responde algo malformado → falha ABERTO, não trata como 'liberado' em silêncio", async () => {
+    for (const rpcCorpo of [null, [], [{}], [{ permitido: "sim" }], "ok"]) {
+      s.restaurar();
+      montar({ rpcCorpo });
+      const r = await enviar({ ...leadBase, idempotencyKey: chave() });
+      assert.equal(r.status, 200);
+      assert.ok(s.logs.some((l) => l.includes("rpc resposta inesperada")), JSON.stringify(rpcCorpo));
+    }
+  });
+
+  test("sem a migração 0005 (função ausente): usa o caminho legado e ainda limita", async () => {
+    s.restaurar();
+    montar({ rpcAusente: true, hitsIniciais: 5 });
+    const barrado = await enviar({ ...leadBase, idempotencyKey: chave() });
+    assert.equal(barrado.status, 429);
+    assert.equal(barrado.headers.get("retry-after"), "600");
+
+    s.restaurar();
+    montar({ rpcAusente: true });
+    const livre = await enviar({ ...leadBase, idempotencyKey: chave() });
+    assert.equal(livre.status, 200);
+    assert.equal(s.hitsRateLimit, 1, "a tentativa tem que estar registrada quando a resposta sai");
+  });
+
+  test("caminho legado: contagem com HTTP 500 não vira 'zero tentativas'", async () => {
+    s.restaurar();
+    montar({ rpcAusente: true, contagemStatus: 500, hitsIniciais: 5 });
+    const r = await enviar({ ...leadBase, idempotencyKey: chave() });
+    assert.equal(r.status, 200, "falha aberto, por decisão documentada");
+    assert.ok(s.logs.some((l) => l.includes("contagem HTTP 500")), "mas a falha fica registrada");
+  });
+
+  test("cabeçalho de IP: prefere o da borda da hospedagem ao que o visitante controla", () => {
+    const req = (h: Record<string, string>) => new Request("http://localhost/", { headers: h });
+    assert.equal(ipDaRequisicao(req({ "x-forwarded-for": "9.9.9.9", "x-real-ip": "1.1.1.1" })), "1.1.1.1");
+    assert.equal(ipDaRequisicao(req({ "x-vercel-forwarded-for": "2.2.2.2, 10.0.0.1", "x-real-ip": "1.1.1.1" })), "2.2.2.2");
+    assert.equal(ipDaRequisicao(req({ "x-forwarded-for": "3.3.3.3, 4.4.4.4" })), "3.3.3.3");
+    assert.equal(ipDaRequisicao(req({})), "sem-ip");
   });
 
   test("abaixo do limite passa, e a tentativa é contada", async () => {

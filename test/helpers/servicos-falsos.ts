@@ -31,6 +31,16 @@ export type Opcoes = {
   hitsIniciais?: number;
   /** A tabela de rate limit não responde (rede). */
   rateLimitCaido?: boolean;
+  /** A função `registrar_tentativa` não existe (migração 0005 não aplicada). */
+  rpcAusente?: boolean;
+  /** A função responde com este status de erro. */
+  rpcStatus?: number;
+  /** A função responde 200 com este corpo (pra testar resposta malformada). */
+  rpcCorpo?: unknown;
+  /** No caminho legado, o HEAD de contagem responde com este status. */
+  contagemStatus?: number;
+  /** No caminho legado, o POST de registro responde com este status. */
+  registroStatus?: number;
   /** Status HTTP do Resend. */
   resendStatus?: number;
   /** Segura a resposta do Resend até o teste liberar. */
@@ -100,13 +110,35 @@ export function instalarServicos(opcoes: Opcoes = {}) {
     const caminho = url.pathname;
     chamadas.push({ metodo, caminho: caminho + (url.search ? "?…" : "") });
 
-    // ── Rate limit ──────────────────────────────────────────────────────
+    // ── Rate limit atômico (função do banco, migração 0005) ─────────────
+    if (caminho === "/rest/v1/rpc/registrar_tentativa") {
+      if (opcoes.rateLimitCaido) throw erroDeRede();
+      if (opcoes.rpcAusente) {
+        return json({ code: "PGRST202", message: "Could not find the function" }, 404);
+      }
+      if (opcoes.rpcStatus) return json({ code: "XX000", message: "erro interno" }, opcoes.rpcStatus);
+      if (opcoes.rpcCorpo !== undefined) return json(opcoes.rpcCorpo);
+      // Síncrono entre ler e escrever, como a transação com trava do banco:
+      // é isso que torna a contagem atômica mesmo com chamadas simultâneas.
+      if (contadorHits >= corpo.p_limite) {
+        return json([{ permitido: false, tentativas: contadorHits, aguardar_segundos: 417 }]);
+      }
+      contadorHits++;
+      return json([{ permitido: true, tentativas: contadorHits, aguardar_segundos: 0 }]);
+    }
+
+    // ── Rate limit legado (contar e depois registrar) ───────────────────
     if (caminho === "/rest/v1/rate_limit_hits") {
       if (opcoes.rateLimitCaido) throw erroDeRede();
       if (metodo === "HEAD") {
+        if (opcoes.contagemStatus) return new Response(null, { status: opcoes.contagemStatus });
+        // Cede a vez antes de responder, como uma ida real à rede: é o que
+        // deixa chamadas simultâneas lerem o MESMO total (a corrida).
+        await new Promise((r) => setTimeout(r, 1));
         return new Response(null, { status: 200, headers: { "content-range": `*/${contadorHits}` } });
       }
       if (metodo === "POST") {
+        if (opcoes.registroStatus) return new Response(null, { status: opcoes.registroStatus });
         contadorHits++;
         return new Response(null, { status: 201 });
       }

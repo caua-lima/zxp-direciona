@@ -221,6 +221,20 @@ async function verificarOnline() {
         aviso(
           "Tabela rate_limit_hits ausente — o rate limit falha aberto (não bloqueia ninguém). Rode a migração 0002.",
         );
+
+      // Migração 0005: função atômica do limite. Sonda com limite 0, que
+      // nunca registra tentativa (sempre devolve "não permitido").
+      const funcao = await fetch(`${url}/rest/v1/rpc/registrar_tentativa`, {
+        method: "POST",
+        headers: { ...cabecalhos, "Content-Type": "application/json" },
+        body: JSON.stringify({ p_bucket: "check-launch", p_janela_segundos: 600, p_limite: 0 }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (funcao.ok) confirmado("Limite de envios atômico ativo (migração 0005).");
+      else
+        aviso(
+          "Migração 0005 não aplicada (função registrar_tentativa). O limite de envios funciona pelo caminho antigo, que deixa passar tentativas simultâneas acima do limite — rode supabase/migrations/0005_rate_limit_atomico.sql.",
+        );
     } catch (erro) {
       bloqueio(
         `Não consegui falar com o Supabase (${erro.cause?.code ?? erro.name}). Projeto pausado, deletado ou URL errada? Confira no dashboard.`,
