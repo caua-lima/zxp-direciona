@@ -14,7 +14,7 @@ import { tracking, trackingAtivo } from "@/config/tracking";
  * Mude este texto no mesmo commit e atualize `ATUALIZADA_EM`. Nada de
  * "conformidade total" nem promessa que ninguém verificou.
  */
-const ATUALIZADA_EM = "3 de outubro de 2026";
+const ATUALIZADA_EM = "11 de outubro de 2026";
 
 export const metadata: Metadata = {
   title: `Privacidade — ${site.nome}`,
@@ -97,11 +97,10 @@ export default function Privacidade() {
         <Bloco titulo="Quais dados coletamos">
           <p>Só o que você preenche no formulário:</p>
           <ul className="flex list-disc flex-col gap-1.5 pl-5">
-            <li>nome e número de WhatsApp;</li>
-            <li>e-mail, se você informar (é opcional);</li>
+            <li>nome, número de WhatsApp e e-mail;</li>
             <li>faixa de idade;</li>
             <li>o que mais pesa hoje, entre as opções da lista;</li>
-            <li>o texto livre sobre o seu momento, se você escrever (é opcional);</li>
+            <li>o relato que você escreve sobre o seu caso;</li>
             <li>a data e a hora em que você autorizou o contato.</li>
           </ul>
           <p>
@@ -143,7 +142,7 @@ export default function Privacidade() {
             <li>Vercel, a hospedagem do site;</li>
             <li>
               Resend, serviço de e-mail usado para avisar a equipe de um novo
-              cadastro. O texto livre que você escreve não vai nesse e-mail.
+              cadastro. O relato que você escreve não vai nesse e-mail.
             </li>
           </ul>
           <p>

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { mentor, mentorPreenchido } from "@/config/mentor";
 
 const garantias = ["Gratuita", "Individual", "Sem compromisso"];
 
@@ -40,8 +41,9 @@ export function Hero() {
               carreira), o que é a conversa (individual, gratuita) e o que
               acontece depois do clique. */}
           <p className="mt-7 max-w-2xl text-lg leading-relaxed text-marfim/80 sm:text-xl">
-            Entre faculdade, carreira e futuro, converse individualmente com a
-            ZXP Direciona sobre as suas opções. Na conversa inicial, gratuita e
+            Entre faculdade, carreira e futuro, converse individualmente com{" "}
+            {mentorPreenchido ? `${mentor.name}, da ZXP Direciona,` : "a ZXP Direciona"}{" "}
+            sobre as suas opções. Na conversa inicial, gratuita e
             sem compromisso, você entende se a mentoria faz sentido para o seu
             momento.
           </p>

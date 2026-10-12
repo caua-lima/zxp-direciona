@@ -5,11 +5,10 @@ import { Section } from "./Section";
 import { Reveal } from "./Reveal";
 import { termos } from "@/config/oferta";
 
-// Duração e prazo só são afirmados se existirem em src/config/oferta.ts —
-// ninguém confirmou nenhum dos dois, então por padrão a resposta manda pra
-// conversa inicial em vez de inventar um número.
-const acompanhamento =
-  "O acompanhamento inclui duas conversas individuais por mês, com suporte por WhatsApp entre elas.";
+// Duração só é afirmada se existir em src/config/oferta.ts. Formato e
+// entregas não são descritos aqui: isso é apresentado na conversa inicial.
+const naConversa =
+  "Como é o acompanhamento, o formato e o investimento você conhece na conversa inicial, antes de decidir qualquer coisa.";
 
 const perguntas = [
   {
@@ -30,8 +29,8 @@ const perguntas = [
   {
     pergunta: "Quanto tempo dura a mentoria?",
     resposta: termos.duracaoDaMentoria
-      ? `A mentoria dura ${termos.duracaoDaMentoria}. ${acompanhamento}`
-      : `${acompanhamento} Os detalhes de duração e investimento você conhece na conversa inicial, antes de decidir qualquer coisa.`,
+      ? `A mentoria dura ${termos.duracaoDaMentoria}. ${naConversa}`
+      : `Depende do seu caso. ${naConversa}`,
   },
   {
     pergunta: "Para quem não é?",

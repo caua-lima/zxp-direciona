@@ -18,7 +18,7 @@ const leadValido: Lead = {
   email: "fulana@exemplo.com",
   idade: "18 a 21",
   peso: "Outro",
-  contexto: "",
+  contexto: "Não sei qual curso escolher e isso me trava.",
   consentimento: true,
   confirmacaoResponsavel: false,
 };
@@ -129,7 +129,7 @@ describe("validarLead", () => {
     const erros = validarLead(leadVazio);
     assert.deepEqual(
       Object.keys(erros).sort(),
-      ["consentimento", "email", "idade", "nome", "peso", "whatsapp"],
+      ["consentimento", "contexto", "email", "idade", "nome", "peso", "whatsapp"],
     );
   });
 
@@ -151,6 +151,14 @@ describe("validarLead", () => {
     assert.ok(validarLead({ ...leadValido, nome: " " }).nome);
     assert.ok(validarLead({ ...leadValido, nome: "x".repeat(121) }).nome);
     assert.equal(validarLead({ ...leadValido, nome: "x".repeat(120) }).nome, undefined);
+  });
+
+  test("contexto: obrigatório, com pelo menos uma frase curta", () => {
+    assert.ok(validarLead({ ...leadValido, contexto: "" }).contexto);
+    assert.ok(validarLead({ ...leadValido, contexto: "      " }).contexto);
+    assert.ok(validarLead({ ...leadValido, contexto: "oi" }).contexto);
+    assert.ok(validarLead({ ...leadValido, contexto: "x".repeat(19) }).contexto);
+    assert.equal(validarLead({ ...leadValido, contexto: "x".repeat(20) }).contexto, undefined);
   });
 
   test("contexto: até 400 caracteres", () => {

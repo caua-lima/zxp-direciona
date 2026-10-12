@@ -351,8 +351,7 @@ export function LeadForm() {
 
               <Campo
                 id="contexto"
-                label="Quer contar mais?"
-                opcional
+                label="Conte um pouco do seu caso"
                 erro={erros.contexto}
               >
                 <textarea
@@ -361,6 +360,7 @@ export function LeadForm() {
                   maxLength={400}
                   enterKeyHint="done"
                   placeholder="Em uma ou duas frases, o que está acontecendo agora."
+                  aria-required="true"
                   value={campos.contexto}
                   onChange={(e) => atualizar("contexto", e.target.value)}
                   aria-invalid={!!erros.contexto}

@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { dadosPrivacidade, site } from "@/config/site";
-import { gruposEntregaveis } from "@/config/oferta";
 
 /**
  * Testa o HTML que o Next de fato gerou (`next build`) — não o JSX. É o que o
@@ -42,15 +41,13 @@ describe("HTML gerado pelo build", opcoes, () => {
     }
   });
 
-  test("entregável só aparece na página se estiver publicado em oferta.ts", () => {
-    // O HTML escapa apóstrofos etc.; os títulos atuais só têm acentos, que passam.
-    for (const item of gruposEntregaveis.flatMap((g) => g.itens)) {
-      assert.equal(
-        html.includes(item.titulo),
-        item.publicado,
-        `"${item.titulo}" ${item.publicado ? "deveria estar" : "não deveria estar"} no HTML`,
-      );
-    }
+  test("o método e a lista de entregas não aparecem na página (são da conversa inicial)", () => {
+    const proibidos = [
+      "Método APE", ">Analisar<", ">Pensar<", ">Executar<", "Você sai com",
+      "O que a mentoria inclui", "Duas conversas individuais", "duas conversas individuais",
+      "Plano de ação", "plano de ação", "treinadora comportamental", "ideia de empreendimento",
+    ];
+    for (const p of proibidos) assert.ok(!html.includes(p), `voltou pra página: ${p}`);
   });
 
   test("a página não afirma preço, duração nem prazo que ninguém confirmou", () => {

@@ -59,7 +59,7 @@ const { site, contatoComercial, dadosPrivacidade } =
 const { diagnosticoTracking, trackingAtivo } = await importar(
   "src/config/tracking.ts",
 );
-const { entregaveisPendentes, termos } = await importar("src/config/oferta.ts");
+const { termos } = await importar("src/config/oferta.ts");
 
 // ── Mentor / autoridade ─────────────────────────────────────────────────
 if (!mentorPreenchido) {
@@ -76,11 +76,6 @@ if (!mentorPreenchido) {
 }
 
 // ── Oferta (o que a página afirma sobre o serviço) ──────────────────────
-for (const item of entregaveisPendentes()) {
-  aviso(
-    `Entregável fora da página: "${item.titulo}" — ${item.pendencia} (src/config/oferta.ts)`,
-  );
-}
 if (!termos.duracaoDaMentoria) {
   precisaVerificar(
     "Duração da mentoria não informada (termos.duracaoDaMentoria em src/config/oferta.ts) — a página diz que isso é combinado na conversa inicial.",

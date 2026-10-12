@@ -12,7 +12,7 @@ const naoE = [
 
 const e = [
   "Um processo individual de direção.",
-  "Análise, reflexão e execução, acompanhadas.",
+  "Um método próprio, aplicado ao seu caso.",
   "Acompanhamento contínuo, não um evento único.",
   "Construído a partir da sua realidade.",
 ];

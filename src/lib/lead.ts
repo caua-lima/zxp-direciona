@@ -101,6 +101,13 @@ export function whatsappInternacional(valor: string) {
   return `55${extrairDigitosNacionais(valor)}`;
 }
 
+/**
+ * O relato é obrigatório: quem atende lê antes de chamar a pessoa, e uma
+ * conversa que começa do zero rende menos. 20 caracteres é só o bastante pra
+ * barrar "oi" e "nada" sem exigir redação.
+ */
+export const CONTEXTO_MINIMO = 20;
+
 export function validarLead(campos: Lead): ErrosLead {
   const erros: ErrosLead = {};
 
@@ -139,7 +146,9 @@ export function validarLead(campos: Lead): ErrosLead {
     erros.peso = "Escolhe a opção que mais se parece com você.";
   }
 
-  if (campos.contexto.length > 400) {
+  if (campos.contexto.trim().length < CONTEXTO_MINIMO) {
+    erros.contexto = "Conta um pouco do seu caso, em pelo menos uma frase.";
+  } else if (campos.contexto.length > 400) {
     erros.contexto = "Tenta resumir em até 400 caracteres.";
   }
 

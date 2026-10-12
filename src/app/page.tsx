@@ -4,8 +4,7 @@ import { ProcessoContato } from "@/components/ProcessoContato";
 import { Authority } from "@/components/Authority";
 import { ProblemIdentification } from "@/components/ProblemIdentification";
 import { WhatItIs } from "@/components/WhatItIs";
-import { MethodApe } from "@/components/MethodApe";
-import { Included } from "@/components/Included";
+import { Acompanhamento } from "@/components/Acompanhamento";
 import { CtaBreak } from "@/components/CtaBreak";
 import { Faq } from "@/components/Faq";
 import { LeadForm } from "@/components/LeadForm";
@@ -28,15 +27,15 @@ export default function Home() {
       {/* Ordem pensada pra tráfego frio: o que é e o que acontece ao clicar,
           quem conduz (a oferta depende de confiança pessoal — Authority só
           aparece quando o mentor está preenchido), o problema, o escopo, o
-          método, o que inclui, e só então o formulário. */}
+          acompanhamento (sem expor o método nem lista de entregas — isso é
+          da conversa inicial), e só então o formulário. */}
       <main className="flex flex-1 flex-col">
         <Hero />
         <ProcessoContato />
         <Authority />
         <ProblemIdentification />
         <WhatItIs />
-        <MethodApe />
-        <Included />
+        <Acompanhamento />
         <CtaBreak />
         <Faq />
         <LeadForm />
