@@ -21,13 +21,12 @@ import { consentimentoVigente, provedoresCarregados } from "./providers";
  * manual duplicaria a contagem, por isso os nossos se chamam lead_form_*.
  */
 
-export type PosicaoCta = "header" | "hero" | "meio" | "mobile_fixo";
+export type PosicaoCta = "header" | "hero" | "mobile_fixo";
 export type OrigemWhatsapp = "sucesso" | "falha";
 
 export const POSICOES_CTA: readonly PosicaoCta[] = [
   "header",
   "hero",
-  "meio",
   "mobile_fixo",
 ];
 export const ORIGENS_WHATSAPP: readonly OrigemWhatsapp[] = ["sucesso", "falha"];

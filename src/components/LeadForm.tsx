@@ -232,14 +232,24 @@ export function LeadForm() {
       id="formulario"
       className="border-t border-onyx-line bg-onyx-raised/50 px-5 py-14 sm:px-6 sm:py-20"
     >
-      <div className="mx-auto max-w-2xl">
-        <div className="mb-8">
+      {/* Mesma grade das outras seções. Em tela larga: título e introdução à
+          esquerda (acompanham a rolagem), formulário à direita. */}
+      <div className="mx-auto max-w-[70rem] lg:grid lg:grid-cols-[5fr_7fr] lg:items-start lg:gap-14">
+        <div className="mb-8 lg:sticky lg:top-28 lg:mb-0">
           <h2 className="font-display text-3xl leading-tight font-bold tracking-tight sm:text-4xl">
             Me conte o que você está vivendo.
           </h2>
           <p className="mt-4 max-w-xl text-lg leading-relaxed text-marfim/75">
             Esse contexto me ajuda a chegar à conversa entendendo melhor o seu
             momento. Depois de enviar, você poderá falar comigo no WhatsApp.
+          </p>
+          <p className="mt-4 text-marfim/75">
+            <a
+              href="#duvidas"
+              className="inline-flex min-h-11 items-center underline decoration-marfim/40 underline-offset-4 hover:text-marfim hover:decoration-dourado"
+            >
+              Tem dúvidas antes? Veja as respostas
+            </a>
           </p>
         </div>
 

@@ -20,7 +20,7 @@ const inter = Inter({
 const siteUrl = site.urlPublica;
 
 const descricao =
-  "ZXP Direciona é a mentoria de direção profissional da ZXP Solutions, para jovens de 16 a 25 anos travados entre faculdade, carreira e futuro. A conversa inicial é gratuita e sem compromisso.";
+  "Mais clareza para o seu próximo passo profissional. Converse com Cauã Lima, da ZXP Direciona, sobre faculdade, carreira ou mudança de caminho. A conversa inicial é gratuita.";
 
 // A Vercel injeta VERCEL_ENV automaticamente ("production" | "preview" |
 // "development"). Só a produção de verdade é indexável — uma preview de PR
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: site.tituloCompleto,
     description:
-      "Você não precisa ter tudo resolvido. Precisa saber qual é o próximo passo.",
+      "Mais clareza para o seu próximo passo profissional. Conversa inicial gratuita com Cauã Lima.",
   },
 };
 

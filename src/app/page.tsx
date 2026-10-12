@@ -1,13 +1,10 @@
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
-import { ProcessoContato } from "@/components/ProcessoContato";
+import { Momento } from "@/components/Momento";
 import { Authority } from "@/components/Authority";
-import { ProblemIdentification } from "@/components/ProblemIdentification";
-import { WhatItIs } from "@/components/WhatItIs";
-import { Acompanhamento } from "@/components/Acompanhamento";
-import { CtaBreak } from "@/components/CtaBreak";
-import { Faq } from "@/components/Faq";
+import { ProcessoContato } from "@/components/ProcessoContato";
 import { LeadForm } from "@/components/LeadForm";
+import { Faq } from "@/components/Faq";
 import { Footer } from "@/components/Footer";
 import { StickyMobileCta } from "@/components/StickyMobileCta";
 import { TrackingProvider } from "@/components/TrackingProvider";
@@ -24,21 +21,20 @@ export default function Home() {
 
       <Header />
 
-      {/* Ordem pensada pra tráfego frio: o que é e o que acontece ao clicar,
-          quem conduz (a oferta depende de confiança pessoal — Authority só
-          aparece quando o mentor está preenchido), o problema, o escopo, o
-          acompanhamento (sem expor o método nem lista de entregas — isso é
-          da conversa inicial), e só então o formulário. */}
+      {/* A página responde quatro perguntas, nesta ordem: é pra mim? quem
+          conversa comigo? como começa? — e então o formulário. O FAQ vem
+          DEPOIS: quem já decidiu não precisa atravessar todas as respostas.
+
+          O que não está aqui de propósito: o método (só na call) e qualquer
+          lista de entregas, duração, frequência ou condição comercial. Não
+          reponha com bloco equivalente — o teste do HTML gerado barra. */}
       <main className="flex flex-1 flex-col">
         <Hero />
-        <ProcessoContato />
+        <Momento />
         <Authority />
-        <ProblemIdentification />
-        <WhatItIs />
-        <Acompanhamento />
-        <CtaBreak />
-        <Faq />
+        <ProcessoContato />
         <LeadForm />
+        <Faq />
       </main>
 
       <Footer />

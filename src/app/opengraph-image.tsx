@@ -72,7 +72,7 @@ export default function OpengraphImage() {
               letterSpacing: -1,
             }}
           >
-            Você não precisa ter tudo resolvido.
+            Mais clareza para o seu
           </div>
           <div
             style={{
@@ -84,7 +84,7 @@ export default function OpengraphImage() {
               marginTop: 8,
             }}
           >
-            Precisa saber qual é o próximo passo.
+            próximo passo profissional.
           </div>
         </div>
 

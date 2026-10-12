@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { dadosPrivacidade, site } from "@/config/site";
 
@@ -16,6 +16,20 @@ const existe = existsSync(caminho);
 const opcoes = existe ? {} : { skip: "rode `npm run build` antes (não há .next/server/app/index.html)" };
 const html = existe ? readFileSync(caminho, "utf8") : "";
 
+/**
+ * Decisão do dono: o método só é apresentado na call e não há lista de
+ * entregas nem condição comercial na página. Nenhum destes termos pode
+ * existir em NADA que o visitante baixa.
+ */
+const PROIBIDOS_NA_PAGINA = [
+  "Método APE", "MethodApe", ">Analisar<", ">Pensar<", ">Executar<", "Você sai com",
+  "Análise, reflexão e execução",
+  "O que a mentoria inclui", "duas conversas individuais", "conversas por mês",
+  "suporte por WhatsApp", "entre as conversas", "plano de ação",
+  "acompanhamento contínuo", "treinadora comportamental", "empreendimento de baixo",
+  "investimento único", "parcelamento", "a maior parte das pessoas",
+];
+
 describe("HTML gerado pelo build", opcoes, () => {
   test("todo link de âncora (#algo) aponta pra um id que existe", () => {
     const alvos = new Set([...html.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]));
@@ -29,7 +43,7 @@ describe("HTML gerado pelo build", opcoes, () => {
   });
 
   test("os CTAs principais levam ao formulário e estão marcados pra medição", () => {
-    for (const posicao of ["header", "hero", "meio", "mobile_fixo"]) {
+    for (const posicao of ["header", "hero", "mobile_fixo"]) {
       const re = new RegExp(`<a[^>]*href="#formulario"[^>]*data-cta="${posicao}"|<a[^>]*data-cta="${posicao}"[^>]*href="#formulario"`);
       assert.match(html, re, `faltou o CTA "${posicao}" apontando pro formulário`);
     }
@@ -42,23 +56,56 @@ describe("HTML gerado pelo build", opcoes, () => {
   });
 
   test("o método e a lista de entregas não aparecem na página (são da conversa inicial)", () => {
-    const proibidos = [
-      "Método APE", ">Analisar<", ">Pensar<", ">Executar<", "Você sai com",
-      "O que a mentoria inclui", "Duas conversas individuais", "duas conversas individuais",
-      "Plano de ação", "plano de ação", "treinadora comportamental", "ideia de empreendimento",
-    ];
-    for (const p of proibidos) assert.ok(!html.includes(p), `voltou pra página: ${p}`);
+    // O HTML inclui o payload RSC embutido; os bundles de .next/static são o
+    // que o navegador baixa. Esconder com CSS ou acordeão não passaria aqui:
+    // o texto simplesmente não pode ser entregue.
+    const superficies: Array<[string, string]> = [["index.html", html]];
+    const andar = (dir: string) => {
+      for (const nome of readdirSync(dir, { withFileTypes: true })) {
+        const p = path.join(dir, nome.name);
+        if (nome.isDirectory()) andar(p);
+        else if (/\.(js|css|json|txt)$/.test(nome.name)) superficies.push([p, readFileSync(p, "utf8")]);
+      }
+    };
+    andar(path.join(process.cwd(), ".next", "static"));
+    assert.ok(superficies.length > 3, "esperava os bundles públicos do build");
+
+    for (const [onde, texto] of superficies) {
+      const baixo = texto.toLowerCase();
+      for (const p of PROIBIDOS_NA_PAGINA) {
+        assert.ok(!baixo.includes(p.toLowerCase()), `"${p}" voltou pra superfície pública: ${onde}`);
+      }
+    }
   });
 
-  test("a página não afirma preço, duração nem prazo que ninguém confirmou", () => {
+  test("a página tem as seções da nova estrutura, nesta ordem, e nenhuma âncora sobrando", () => {
+    const h2 = [...html.matchAll(/<h2[^>]*>([^<]+)</g)].map((m) => m[1]);
+    assert.deepEqual(h2, [
+      "Qual decisão está ocupando sua cabeça?",
+      "Você vai conversar comigo.",
+      "Da sua dúvida à nossa primeira conversa.",
+      "Me conte o que você está vivendo.",
+      "Dúvidas antes de conversar",
+    ]);
+    for (const id of ["metodo", "como-funciona"]) {
+      assert.ok(!html.includes(`id="${id}"`) && !html.includes(`href="#${id}"`), `sobrou #${id}`);
+    }
+  });
+
+  test("a página fala em primeira pessoa: Cauã é nomeado e não há voz de equipe", () => {
+    // O React separa texto e variável com um comentário vazio no HTML.
+    assert.match(html.replaceAll("<!-- -->", ""), /Sou Cauã Lima/);
+    assert.match(html, /Quero conversar com Cauã/);
+    for (const equipe of ["a gente chama", "Entramos em contato", "Vamos te chamar", "chama a gente", "converse individualmente com a ZXP"]) {
+      assert.ok(!html.includes(equipe), `voz de equipe na página: ${equipe}`);
+    }
+  });
+
+  test("a página não afirma preço, duração, prazo nem condição comercial que ninguém confirmou", () => {
     assert.ok(!/R\$\s?\d/.test(html), "preço no HTML");
     assert.ok(!/\d+\s*(meses|mês)/i.test(html), "duração afirmada no HTML");
-    assert.ok(!/em até \d+|responderemos em/i.test(html), "prazo de retorno afirmado no HTML");
-  });
-
-  test("a seção 'Como funciona' existe uma vez e o hero aponta pra ela", () => {
-    assert.equal((html.match(/\sid="como-funciona"/g) ?? []).length, 1);
-    assert.match(html, /href="#como-funciona"/);
+    assert.ok(!/em até \d+|responderemos em|retornamos em/i.test(html), "prazo de retorno afirmado no HTML");
+    assert.ok(!/vagas limitadas|últimas vagas|garantia de resultado/i.test(html), "escassez ou garantia no HTML");
   });
 
   test("idioma, título, canonical e descrição corretos", () => {

@@ -2,50 +2,48 @@
 
 import { useState } from "react";
 import { Section } from "./Section";
-import { Reveal } from "./Reveal";
-import { termos } from "@/config/oferta";
 
-// Duração só é afirmada se existir em src/config/oferta.ts. Formato e
-// entregas não são descritos aqui: isso é apresentado na conversa inicial.
-const naConversa =
-  "Como é o acompanhamento, o formato e o investimento você conhece na conversa inicial, antes de decidir qualquer coisa.";
-
+/**
+ * Objeções que sobram depois do formulário. O que NÃO entra aqui, por
+ * decisão do dono: método, frequência, suporte, entregas, duração, forma de
+ * pagamento, prazo de resposta e qualquer frase que pressuponha histórico
+ * ("a maioria das pessoas...").
+ */
 const perguntas = [
   {
-    pergunta: "Para quem é a ZXP Direciona?",
+    pergunta: "Quem vai falar comigo?",
     resposta:
-      "Pra jovens de 16 a 25 anos que precisam de direção — na escolha da faculdade, numa virada de carreira ou na decisão do que fazer agora. Vale tanto pra quem não escolheu nada quanto pra quem escolheu e se arrependeu.",
+      "Você vai falar diretamente comigo, Cauã Lima. Sou eu quem conduz a conversa inicial da ZXP Direciona.",
   },
   {
-    pergunta: "A conversa inicial tem algum custo?",
+    pergunta: "A conversa inicial é gratuita?",
     resposta:
-      "Não. A conversa inicial é gratuita e sem compromisso. A mentoria em si é um serviço pago, com investimento único apresentado nessa conversa, depois de entendermos o seu caso. Não trabalhamos com parcelamento em múltiplas vezes.",
+      "Sim. A conversa inicial é gratuita e sem compromisso de contratação. A mentoria é paga; a proposta e as condições são apresentadas na call.",
   },
   {
-    pergunta: "O que acontece na conversa inicial?",
+    pergunta: "O que vamos conversar?",
     resposta:
-      "É uma conversa individual pra entender o seu momento, apontar o que está travando e avaliar se a ZXP Direciona faz sentido pra você. Se não fizer, a gente diz isso na hora.",
+      "Sobre o seu momento e a decisão que você está tentando tomar. Na call, explico a proposta da mentoria e avaliamos se ela faz sentido para você.",
   },
   {
-    pergunta: "Quanto tempo dura a mentoria?",
-    resposta: termos.duracaoDaMentoria
-      ? `A mentoria dura ${termos.duracaoDaMentoria}. ${naConversa}`
-      : `Depende do seu caso. ${naConversa}`,
+    pergunta: "Preciso já saber qual caminho quero seguir?",
+    resposta:
+      "Não. Você pode contar as opções que considera ou explicar por que ainda não sabe por onde começar.",
   },
   {
-    pergunta: "Para quem não é?",
+    pergunta: "Para quem é?",
     resposta:
-      "Não é pra quem busca terapia ou acompanhamento clínico, nem pra quem quer receber uma resposta pronta sobre qual profissão seguir. A ZXP Direciona é método, acompanhamento e execução — a decisão continua sendo sua.",
+      "A ZXP Direciona é voltada principalmente a jovens que estão escolhendo ou repensando caminhos acadêmicos e profissionais. Conte seu momento para avaliarmos se a proposta faz sentido para o seu caso.",
   },
   {
-    pergunta: "A ZXP Direciona garante emprego ou uma renda específica?",
+    pergunta: "A mentoria garante emprego ou substitui terapia?",
     resposta:
-      "Não. A ZXP Direciona entrega método, direção e acompanhamento na execução. Não promete emprego, renda, aprovação nem a profissão perfeita — quem faz acontecer é você, com apoio.",
+      "Não há garantia de emprego, renda ou de uma escolha perfeita. A proposta é de mentoria profissional e não substitui atendimento psicológico ou clínico.",
   },
   {
-    pergunta: "Preciso já saber o que quero pra participar?",
+    pergunta: "O envio já agenda a conversa?",
     resposta:
-      "Não. A maior parte das pessoas chega justamente sem saber. Não ter clareza é o ponto de partida do processo, não um pré-requisito pra entrar.",
+      "Não. Depois de enviar seu contexto, você pode me chamar pelo WhatsApp para combinarmos o horário.",
   },
 ];
 
@@ -53,59 +51,51 @@ export function Faq() {
   const [aberta, setAberta] = useState<number | null>(0);
 
   return (
-    <Section eyebrow="Perguntas frequentes" title="Antes de você perguntar">
-      <div className="flex flex-col gap-3">
+    <Section id="duvidas" lateral title="Dúvidas antes de conversar">
+      <div className="max-w-3xl border-b border-marfim/15">
         {perguntas.map((item, i) => {
           const isOpen = aberta === i;
-
           return (
-            <Reveal key={item.pergunta} delay={i * 40}>
-              <div
-                className={`rounded-xl border bg-onyx-raised transition-colors ${
-                  isOpen ? "border-dourado/30" : "border-onyx-line"
-                }`}
-              >
-                <h3>
-                  <button
-                    type="button"
-                    onClick={() => setAberta(isOpen ? null : i)}
-                    aria-expanded={isOpen}
-                    aria-controls={`faq-painel-${i}`}
-                    id={`faq-botao-${i}`}
-                    className="flex w-full cursor-pointer items-center justify-between gap-4 p-5 text-left font-semibold text-marfim"
-                  >
-                    {item.pergunta}
-                    <span
-                      aria-hidden="true"
-                      className={`shrink-0 text-xl leading-none text-dourado transition-transform duration-300 ${
-                        isOpen ? "rotate-45" : ""
-                      }`}
-                    >
-                      +
-                    </span>
-                  </button>
-                </h3>
-
-                {/* grid 0fr→1fr anima a altura mantendo o texto no DOM (bom pra
-                    SEO). aria-hidden quando fechado é o que garante que um
-                    leitor de tela não anuncie a resposta antes de ela abrir —
-                    overflow:hidden sozinho nem sempre basta pra isso. */}
-                <div
-                  id={`faq-painel-${i}`}
-                  role="region"
-                  aria-labelledby={`faq-botao-${i}`}
-                  aria-hidden={!isOpen}
-                  className="grid transition-all duration-300 ease-out"
-                  style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+            <div key={item.pergunta} className="border-t border-marfim/15">
+              <h3>
+                <button
+                  type="button"
+                  onClick={() => setAberta(isOpen ? null : i)}
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-painel-${i}`}
+                  id={`faq-botao-${i}`}
+                  className="flex min-h-14 w-full cursor-pointer items-center justify-between gap-4 py-4 text-left text-lg font-semibold text-marfim"
                 >
-                  <div className="overflow-hidden">
-                    <p className="px-5 pb-5 leading-relaxed text-marfim/65">
-                      {item.resposta}
-                    </p>
-                  </div>
+                  {item.pergunta}
+                  <span
+                    aria-hidden="true"
+                    className={`shrink-0 text-xl leading-none text-dourado transition-transform duration-200 ${
+                      isOpen ? "rotate-45" : ""
+                    }`}
+                  >
+                    +
+                  </span>
+                </button>
+              </h3>
+              {/* grid 0fr→1fr anima a altura mantendo o texto no DOM.
+                  aria-hidden + inert quando fechado: leitor de tela e busca
+                  por teclado não entram numa resposta que não está visível. */}
+              <div
+                id={`faq-painel-${i}`}
+                role="region"
+                aria-labelledby={`faq-botao-${i}`}
+                aria-hidden={!isOpen}
+                inert={!isOpen}
+                className="grid transition-[grid-template-rows] duration-200 ease-out"
+                style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+              >
+                <div className="overflow-hidden">
+                  <p className="max-w-[62ch] pb-5 leading-relaxed text-marfim/80">
+                    {item.resposta}
+                  </p>
                 </div>
               </div>
-            </Reveal>
+            </div>
           );
         })}
       </div>

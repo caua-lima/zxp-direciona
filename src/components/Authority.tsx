@@ -1,63 +1,26 @@
-import Image from "next/image";
 import { Section } from "./Section";
 import { Reveal } from "./Reveal";
-import { mentor, mentorPreenchido } from "@/config/mentor";
+import { mentor } from "@/config/mentor";
 
+/**
+ * Quem conduz. Só texto, de propósito: a foto já está no hero, e repetir um
+ * retrato grande aqui não acrescenta nada. O conteúdo é o papel do Cauã e o
+ * que acontece na conversa — a frase pessoal fica como nota, não como
+ * biografia nem prova de competência.
+ */
 export function Authority() {
-  // Publicar "[Nome do mentor]" pra um visitante de verdade é pior do que
-  // não mostrar a seção — ver o comentário em src/config/mentor.ts.
-  if (!mentorPreenchido) return null;
-
   return (
-    <Section eyebrow="Quem conduz" title="Quem vai estar do outro lado da conversa">
+    <Section lateral title="Você vai conversar comigo.">
       <Reveal>
-        <div className="card-destaque flex flex-col gap-6 rounded-2xl p-6 sm:flex-row sm:items-center sm:gap-8 sm:p-8">
-          <div className="relative h-36 w-36 shrink-0 sm:h-44 sm:w-44 overflow-hidden rounded-2xl border border-dourado/25 bg-onyx">
-            {mentor.photoUrl ? (
-              <Image
-                src={mentor.photoUrl}
-                alt={mentor.name}
-                fill
-                sizes="(min-width: 640px) 176px, 144px"
-                className="object-cover"
-              />
-            ) : (
-              /* Placeholder — some sozinho quando `photoUrl` for preenchido
-                 em src/config/mentor.ts */
-              <span className="flex h-full w-full items-center justify-center text-center text-xs leading-tight tracking-wide text-marfim/55 uppercase">
-                Foto
-                <br />
-                aqui
-              </span>
-            )}
-          </div>
-
-          <div>
-            <p className="font-display text-2xl font-bold">{mentor.name}</p>
-            <p className="mt-1 text-sm font-semibold text-dourado">
-              {mentor.role}
-            </p>
-            {mentor.bioEhCitacao ? (
-              <blockquote className="mt-4 border-l-2 border-dourado/50 pl-4 text-lg leading-relaxed text-marfim/85">
-                “{mentor.bio}”
-              </blockquote>
-            ) : (
-              <p className="mt-4 leading-relaxed text-marfim/70">{mentor.bio}</p>
-            )}
-
-            {mentor.highlights.length > 0 && (
-              <ul className="mt-5 flex flex-wrap gap-2">
-                {mentor.highlights.map((h) => (
-                  <li
-                    key={h}
-                    className="rounded-full border border-marfim/12 bg-marfim/[0.04] px-3 py-1.5 text-xs text-marfim/60"
-                  >
-                    {h}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+        <div className="max-w-2xl">
+          <p className="font-display text-xl font-bold">{mentor.name}</p>
+          <p className="mt-1 text-sm font-semibold text-marfim/70">{mentor.role}</p>
+          <p className="mt-5 text-lg leading-relaxed text-marfim/85">
+            {mentor.apresentacao}
+          </p>
+          <p className="mt-7 border-l border-marfim/25 pl-4 text-base leading-relaxed text-marfim/70 italic">
+            “{mentor.frase}”
+          </p>
         </div>
       </Reveal>
     </Section>

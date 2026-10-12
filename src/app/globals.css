@@ -60,39 +60,6 @@ body {
 
 /* ── Utilitários de marca ─────────────────────────────────────────── */
 
-/* Headline em degradê dourado */
-.text-gradient-dourado {
-  background: linear-gradient(
-    135deg,
-    var(--brand-dourado) 0%,
-    var(--brand-dourado-claro) 55%,
-    var(--brand-dourado) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* Textura de grão — dá profundidade ao fundo chapado sem imagem externa */
-.grain::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.35;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
-}
-
-/* Brilho radial dourado usado atrás do hero e do formulário */
-.glow-dourado {
-  background: radial-gradient(
-    ellipse 60% 50% at 50% 0%,
-    rgb(244 185 66 / 0.13),
-    transparent 70%
-  );
-}
-
 /* Borda com leve degradê — usada nos cards de destaque */
 .card-destaque {
   background:
@@ -104,18 +71,26 @@ body {
 }
 
 /* ── Animação de entrada ao rolar ─────────────────────────────────── */
+/* Curta e discreta: 200ms e 8px. Sem will-change permanente (segurava uma
+   camada de composição por elemento à toa) e sem cascata de atrasos. */
 .reveal {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(8px);
   transition:
-    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
+    opacity 0.2s ease-out,
+    transform 0.2s ease-out;
 }
 
 .reveal[data-visible="true"] {
   opacity: 1;
   transform: none;
+}
+
+/* ── Barra fixa de CTA (celular) ──────────────────────────────────── */
+/* O aviso de consentimento ocupa a mesma faixa de baixo da tela. Enquanto
+   ele existir no DOM, a barra some — em CSS, então vale antes de hidratar. */
+html:has([data-aviso-consentimento]) .barra-cta-fixa {
+  display: none;
 }
 
 /* ── Acessibilidade: respeita quem pediu menos movimento ──────────── */

@@ -1,68 +1,46 @@
 import { Section } from "./Section";
 import { Reveal } from "./Reveal";
-import { termos } from "@/config/oferta";
 
+/**
+ * Logística do contato, e só isso: cadastro, WhatsApp, call. NÃO é o método
+ * da mentoria — nome, etapas e entregas ficam para a conversa e não entram
+ * aqui nem resumidos.
+ */
 const passos = [
   {
-    titulo: "Você envia seu contato",
-    texto: "Um formulário curto, com o seu WhatsApp e a sua faixa de idade.",
+    titulo: "Conte seu momento",
+    texto: "Preencha seus dados e descreva a decisão que você está tentando tomar.",
   },
   {
-    titulo: "A gente combina o horário",
-    texto: "Entramos em contato pelo WhatsApp para marcar a conversa.",
-  },
-  {
-    titulo: "Conversa individual",
+    titulo: "Fale comigo no WhatsApp",
     texto:
-      "Você conta o seu momento e a gente avalia junto se a mentoria faz sentido. Sem compromisso e sem custo.",
+      "Depois do envio, abra a conversa diretamente comigo para combinarmos a call.",
+  },
+  {
+    titulo: "Conheça a proposta na call",
+    texto:
+      "Conversamos sobre o seu caso. Se houver alinhamento, apresento como a mentoria funciona e suas condições, antes de qualquer decisão.",
   },
 ];
 
 export function ProcessoContato() {
   return (
-    <Section
-      id="como-funciona"
-      eyebrow="O primeiro passo"
-      title="Como funciona a conversa inicial"
-      largura="ampla"
-      faixa
-    >
-      <ol className="relative grid gap-10 md:grid-cols-3 md:gap-8">
-        {/* Linha que liga os três passos no desktop */}
-        <div
-          aria-hidden="true"
-          className="absolute top-6 right-[16%] left-[16%] hidden h-px bg-gradient-to-r from-dourado/10 via-dourado/40 to-dourado/10 md:block"
-        />
-
-        {passos.map((passo, i) => (
-          <li key={passo.titulo} className="relative">
-            <Reveal delay={i * 110}>
-              <div className="flex gap-5 md:flex-col md:items-center md:gap-0 md:text-center">
-                <span
-                  aria-hidden="true"
-                  className="font-display relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-dourado/40 bg-onyx text-lg font-bold text-dourado"
-                >
-                  {i + 1}
-                </span>
-                <div className="md:mt-6">
-                  <h3 className="font-display text-xl font-bold">{passo.titulo}</h3>
-                  <p className="mt-2 leading-relaxed text-marfim/70 md:mx-auto md:max-w-xs">
-                    {passo.texto}
-                  </p>
-                </div>
-              </div>
-            </Reveal>
-          </li>
-        ))}
-      </ol>
-
-      <Reveal delay={150}>
-        <p className="mx-auto mt-12 max-w-2xl border-t border-onyx-line pt-8 text-center leading-relaxed text-marfim/70">
-          A conversa inicial é <strong className="text-marfim">gratuita</strong>.
-          A mentoria é um serviço pago: o investimento é apresentado nessa
-          conversa, depois de entendermos o seu caso
-          {termos.prazoDeRetorno ? `. Retornamos ${termos.prazoDeRetorno}` : ""}.
-        </p>
+    <Section id="como-comecamos" faixa title="Da sua dúvida à nossa primeira conversa.">
+      <Reveal>
+        <ol className="grid gap-x-10 gap-y-8 md:grid-cols-3">
+          {passos.map((passo, i) => (
+            <li key={passo.titulo} className="border-t border-marfim/15 pt-6">
+              <span
+                aria-hidden="true"
+                className="font-display text-sm font-bold tracking-[0.1em] text-dourado"
+              >
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <h3 className="font-display mt-2 text-xl font-bold">{passo.titulo}</h3>
+              <p className="mt-2 leading-relaxed text-marfim/75">{passo.texto}</p>
+            </li>
+          ))}
+        </ol>
       </Reveal>
     </Section>
   );

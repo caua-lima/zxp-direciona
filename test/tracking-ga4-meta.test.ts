@@ -186,7 +186,7 @@ describe("aceitou também a publicidade", () => {
 
   test("outros eventos NÃO vão pro Meta (só a conversão)", () => {
     const antes = fbqFila().length;
-    events.track({ nome: "cta_click", posicao: "meio" });
+    events.track({ nome: "cta_click", posicao: "hero" });
     events.track({ nome: "lead_form_start" });
     assert.equal(fbqFila().length, antes);
   });

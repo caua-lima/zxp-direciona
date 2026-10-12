@@ -1,87 +1,84 @@
 import Image from "next/image";
-import { mentor, mentorPreenchido } from "@/config/mentor";
-
-const garantias = ["Gratuita", "Individual", "Sem compromisso"];
+import { mentor } from "@/config/mentor";
 
 export function Hero() {
   return (
     <section
       id="top"
-      className="grain relative isolate overflow-hidden px-6 pt-32 pb-20 sm:pt-40 sm:pb-28"
+      className="relative isolate overflow-hidden px-5 pt-28 pb-14 sm:px-6 sm:pt-36 sm:pb-20"
     >
-      {/* Camadas de fundo — imagem com o Z em linhas douradas à direita (o
-          lado esquerdo dela é liso, é onde o texto fica) + brilho dourado.
-          Decorativa: alt vazio. No celular fica mais apagada, porque ali as
-          linhas passam por trás do texto. */}
+      {/* Fundo só aqui, só no lado direito e só em tela larga — no celular as
+          linhas passariam por trás do texto. Decorativo (alt vazio) e sem
+          `priority`: a página fica inteira sem ele. O degradê por cima deixa
+          a metade do texto limpa. */}
       <Image
         src="/hero-fundo.jpg"
         alt=""
         fill
-        priority
         sizes="100vw"
-        className="pointer-events-none -z-20 object-cover object-right opacity-50 sm:opacity-100"
+        className="pointer-events-none -z-20 hidden object-cover object-right opacity-70 lg:block"
       />
-      <div className="glow-dourado absolute inset-0 -z-10" aria-hidden="true" />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 hidden bg-gradient-to-r from-onyx via-onyx/85 to-onyx/30 lg:block"
+      />
 
-      <div className="mx-auto max-w-[70rem]">
-        <div className="max-w-3xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-dourado/25 bg-dourado/[0.06] px-3.5 py-1.5 text-[11px] font-semibold tracking-[0.08em] text-dourado uppercase min-[400px]:px-4 min-[400px]:text-xs min-[400px]:tracking-[0.14em]">
-            <span className="h-1.5 w-1.5 rounded-full bg-dourado" />
+      <div className="mx-auto grid max-w-[70rem] items-center gap-10 lg:grid-cols-[58fr_42fr] lg:gap-14">
+        <div>
+          <p className="text-xs font-semibold tracking-[0.14em] text-dourado uppercase">
             Mentoria de direção profissional
-          </span>
-
-          <h1 className="font-display mt-7 text-[2.125rem] leading-[1.1] font-bold tracking-tight min-[400px]:text-[2.5rem] sm:text-6xl lg:text-[4.25rem]">
-            Você não precisa ter tudo{" "}
-            <span className="text-gradient-dourado">resolvido.</span>
-            <br className="hidden sm:block" /> Precisa saber qual é o{" "}
-            <span className="text-gradient-dourado">próximo passo.</span>
-          </h1>
-
-          {/* O concreto vem aqui, na primeira dobra: pra quem é (faculdade e
-              carreira), o que é a conversa (individual, gratuita) e o que
-              acontece depois do clique. */}
-          <p className="mt-7 max-w-2xl text-lg leading-relaxed text-marfim/80 sm:text-xl">
-            Entre faculdade, carreira e futuro, converse individualmente com{" "}
-            {mentorPreenchido ? `${mentor.name}, da ZXP Direciona,` : "a ZXP Direciona"}{" "}
-            sobre as suas opções. Na conversa inicial, gratuita e
-            sem compromisso, você entende se a mentoria faz sentido para o seu
-            momento.
           </p>
 
-          <div className="mt-9 flex w-full flex-col gap-4 sm:w-auto sm:flex-row sm:items-center sm:gap-6">
+          <h1 className="font-display mt-5 text-[2.125rem] leading-[1.12] font-bold tracking-tight min-[400px]:text-[2.5rem] sm:text-5xl lg:text-[3.5rem]">
+            Mais clareza para o seu{" "}
+            <span className="text-dourado">próximo passo</span> profissional.
+          </h1>
+
+          <p className="mt-6 max-w-[55ch] text-[1.0625rem] leading-relaxed text-marfim/85 sm:text-xl">
+            Sou {mentor.name}, à frente da ZXP Direciona. Se você está entre
+            faculdade, carreira ou uma mudança de caminho, vamos conversar sobre
+            o seu momento e avaliar se a mentoria faz sentido para você.
+          </p>
+
+          <div className="mt-8">
             <a
               href="#formulario"
               data-cta="hero"
-              className="rounded-xl bg-dourado px-8 py-4 text-center text-base font-bold text-onyx shadow-lg shadow-dourado/15 transition hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0"
+              className="flex min-h-13 items-center justify-center rounded-xl bg-dourado px-8 py-4 text-center text-base font-bold text-onyx transition hover:brightness-110 active:brightness-95 sm:inline-flex"
             >
-              Quero minha conversa gratuita
+              Quero conversar com Cauã
             </a>
-            {/* Ação secundária discreta: link, não um segundo botão disputando
-                atenção com o principal. */}
-            <a
-              href="#como-funciona"
-              className="flex min-h-11 items-center justify-center gap-2 text-base font-semibold text-marfim/75 underline decoration-marfim/25 underline-offset-[6px] transition hover:text-marfim hover:decoration-dourado"
-            >
-              Como funciona
-              <span aria-hidden="true">↓</span>
-            </a>
+            <p className="mt-4 max-w-[48ch] leading-relaxed text-marfim/80">
+              Primeiro, conte seu momento. Depois, fale direto comigo no
+              WhatsApp para combinarmos a conversa.
+            </p>
+            <p className="mt-3 max-w-[48ch] text-sm leading-relaxed text-marfim/70">
+              Conversa inicial gratuita. A mentoria é paga e será apresentada
+              na call.
+            </p>
           </div>
-
-          <p className="mt-5 text-sm text-marfim/60">
-            Você envia seu contato e combinamos o horário pelo WhatsApp.
-          </p>
-
-          <ul className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-marfim/60">
-            {garantias.map((item) => (
-              <li key={item} className="flex items-center gap-2">
-                <span aria-hidden="true" className="text-dourado">
-                  ✓
-                </span>
-                {item}
-              </li>
-            ))}
-          </ul>
         </div>
+
+        {/* Uma foto só nesta página, e é aqui: quem vai conversar tem rosto
+            antes do cadastro. No celular fica compacta, DEPOIS do texto e do
+            botão; em tela larga ocupa a coluna da direita. */}
+        {mentor.photoUrl && (
+          <figure className="flex items-center gap-4 lg:block">
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-marfim/15 lg:aspect-square lg:h-auto lg:w-full">
+              <Image
+                src={mentor.photoUrl}
+                alt={mentor.photoAlt}
+                fill
+                priority
+                sizes="(min-width: 1024px) 440px, 96px"
+                className="object-cover"
+              />
+            </div>
+            <figcaption className="text-sm font-semibold text-marfim/80 lg:mt-4">
+              {mentor.assinatura}
+            </figcaption>
+          </figure>
+        )}
       </div>
     </section>
   );

@@ -123,6 +123,7 @@ function BannerConsentimento({
     <div
       ref={raiz}
       role="dialog"
+      data-aviso-consentimento=""
       aria-modal="false"
       aria-labelledby="consentimento-titulo"
       tabIndex={-1}

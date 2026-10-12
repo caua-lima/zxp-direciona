@@ -59,31 +59,18 @@ const { site, contatoComercial, dadosPrivacidade } =
 const { diagnosticoTracking, trackingAtivo } = await importar(
   "src/config/tracking.ts",
 );
-const { termos } = await importar("src/config/oferta.ts");
 
 // ── Mentor / autoridade ─────────────────────────────────────────────────
 if (!mentorPreenchido) {
   bloqueio(
-    "Mentor não preenchido (src/config/mentor.ts) — a seção de autoridade " +
-      "fica escondida da página (correto, ver Authority.tsx), mas a oferta " +
+    "Mentor não preenchido (src/config/mentor.ts: name/apresentacao) — a " +
+      "página inteira é escrita em primeira pessoa por ele; sem isso a oferta " +
       "não tem quem a sustente até isso ser preenchido de verdade.",
   );
 } else if (!mentor.photoUrl) {
   aviso(
     "Mentor preenchido, mas sem foto (photoUrl em src/config/mentor.ts) — " +
       "a seção aparece com um placeholder de foto vazio.",
-  );
-}
-
-// ── Oferta (o que a página afirma sobre o serviço) ──────────────────────
-if (!termos.duracaoDaMentoria) {
-  precisaVerificar(
-    "Duração da mentoria não informada (termos.duracaoDaMentoria em src/config/oferta.ts) — a página diz que isso é combinado na conversa inicial.",
-  );
-}
-if (!termos.prazoDeRetorno) {
-  precisaVerificar(
-    "Prazo de retorno não informado (termos.prazoDeRetorno em src/config/oferta.ts) — a página não promete prazo nenhum. Se o time não responde rápido, deixe assim.",
   );
 }
 
